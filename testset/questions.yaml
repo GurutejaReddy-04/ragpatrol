@@ -1,0 +1,23 @@
+# Curated Evaluation Test Set (Schema v1.0)
+# Categories: easy (single direct chunk), ambiguous (multi-chunk), edge (out-of-domain / ungrounded)
+
+- id: "q001"
+  question: "What is the retry policy for failed embeddings?"
+  ground_truth_chunk_ids:
+    - "doc12_chunk3"
+  reference_answer: "Failed embedding calls are retried 3 times with exponential backoff."
+  category: "easy"
+
+- id: "q002"
+  question: "How does tenant collection isolation work in ChromaDB?"
+  ground_truth_chunk_ids:
+    - "auth_arch_chunk1"
+    - "chroma_tenant_chunk2"
+  reference_answer: "Tenant collections are isolated using cryptographic tenant ID prefixing and separate collections."
+  category: "ambiguous"
+
+- id: "q003"
+  question: "What is the internal quantum computing architecture of the server?"
+  ground_truth_chunk_ids: []
+  reference_answer: "I do not have information regarding quantum computing architecture."
+  category: "edge"

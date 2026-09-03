@@ -1,0 +1,199 @@
+"""
+Robust HTTP client adapter for communicating with target RAG APIs.
+
+Implements exponential backoff via tenacity, custom exception mapping,
+latency tracking, and automatic citation normalization.
+"""
+
+import logging
+import time
+from typing import Any, Optional
+import httpx
+from tenacity import (
+    before_sleep_log,
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
+
+from harness.clients.contracts import RAGResponse, normalize_target_response
+from harness.exceptions import (
+    RAGConnectionError,
+    RAGResponseError,
+    RAGTimeoutError,
+)
+
+logger = logging.getLogger(__name__)
+
+
+class RAGClient:
+    """
+    HTTP client for querying and checking health of the target RAG system.
+
+    Treats the target RAG deployment as a black-box service. Incoming citations
+    are mapped into normalized RetrievedChunk DTOs immediately at the client boundary.
+    """
+
+    def __init__(
+        self,
+        base_url: str = "http://127.0.0.1:8000",
+        api_key: Optional[str] = None,
+        timeout_seconds: float = 30.0,
+        max_retries: int = 3,
+        http_client: Optional[httpx.Client] = None,
+    ) -> None:
+        """
+        Initialize the RAG client adapter.
+
+        :param base_url: Target API root URL (e.g., http://127.0.0.1:8000).
+        :param api_key: Optional API key sent via X-API-Key header.
+        :param timeout_seconds: Network read/write timeout in seconds.
+        :param max_retries: Maximum attempts for transient network retries.
+        :param http_client: Injected httpx.Client for testing or lifecycle reuse.
+        """
+        self.base_url = base_url.rstrip("/")
+        self.api_key = api_key
+        self.timeout_seconds = timeout_seconds
+        self.max_retries = max_retries
+
+        headers: dict[str, str] = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+        if self.api_key:
+            headers["X-API-Key"] = self.api_key
+
+        self._client: httpx.Client = http_client or httpx.Client(
+            base_url=self.base_url,
+            headers=headers,
+            timeout=httpx.Timeout(self.timeout_seconds),
+        )
+        self._owns_client = http_client is None
+
+    def __enter__(self) -> "RAGClient":
+        return self
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        self.close()
+
+    def close(self) -> None:
+        """Release underlying HTTP client connections."""
+        if self._owns_client:
+            self._client.close()
+
+    def check_health(self) -> bool:
+        """
+        Perform a liveness check against the target's /health endpoint.
+
+        :return: True if the service responds with HTTP 200 OK.
+        :raises RAGConnectionError: If the server is unreachable.
+        :raises RAGResponseError: If the server responds with an error code.
+        """
+        url = f"{self.base_url}/health"
+        logger.info("Executing health check against %s", url)
+
+        try:
+            response = self._client.get(url)
+            if response.status_code == 200:
+                logger.info("Target service at %s is healthy.", self.base_url)
+                return True
+            logger.error("Health check failed with HTTP %d: %s", response.status_code, response.text)
+            raise RAGResponseError(
+                message=f"Health check failed with HTTP {response.status_code}",
+                status_code=response.status_code,
+                response_body=response.text,
+            )
+        except httpx.ConnectError as e:
+            logger.error("Failed to connect to target at %s: %s", url, e)
+            raise RAGConnectionError(f"Cannot connect to target service at {url}: {e}") from e
+        except httpx.TimeoutException as e:
+            logger.error("Health check timed out after %.1fs: %s", self.timeout_seconds, e)
+            raise RAGTimeoutError(f"Health check timed out after {self.timeout_seconds}s") from e
+        except httpx.RequestError as e:
+            logger.error("Request error during health check: %s", e)
+            raise RAGConnectionError(f"Target health check request error: {e}") from e
+
+    def query(
+        self,
+        question: str,
+        collection_name: Optional[str] = None,
+        filters: Optional[dict[str, Any]] = None,
+        extra_payload: Optional[dict[str, Any]] = None,
+    ) -> RAGResponse:
+        """
+        Execute a query against the target system's POST /query endpoint.
+
+        Times the request duration, executes retries on transient network faults,
+        and translates citations into normalized RetrievedChunk DTOs.
+
+        :param question: The test query to evaluate.
+        :param collection_name: Optional collection/tenant scope.
+        :param filters: Optional metadata filters.
+        :param extra_payload: Additional vendor-specific payload arguments.
+        :return: Normalized RAGResponse DTO.
+        """
+        if not question or not question.strip():
+            raise ValueError("Query question cannot be empty or whitespace.")
+
+        payload: dict[str, Any] = {"question": question.strip()}
+        if collection_name:
+            payload["collection_name"] = collection_name
+        if filters:
+            payload["filters"] = filters
+        if extra_payload:
+            payload.update(extra_payload)
+
+        url = f"{self.base_url}/query"
+        logger.info("Querying target %s with question: %s", url, question[:60])
+
+        return self._execute_query_with_retry(url, payload)
+
+    def _execute_query_with_retry(self, url: str, payload: dict[str, Any]) -> RAGResponse:
+        """Internal dispatch with tenacity retry configuration."""
+
+        @retry(
+            reraise=True,
+            stop=stop_after_attempt(self.max_retries),
+            wait=wait_exponential(multiplier=1, min=1, max=10),
+            retry=retry_if_exception_type((httpx.ConnectError, httpx.ReadTimeout, httpx.ConnectTimeout)),
+            before_sleep=before_sleep_log(logger, logging.WARNING),
+        )
+        def _send() -> RAGResponse:
+            start_time = time.perf_counter()
+            try:
+                response = self._client.post(url, json=payload)
+            except (httpx.ConnectError, httpx.NetworkError) as e:
+                logger.warning("Transient network error calling %s: %s. Retrying...", url, e)
+                raise RAGConnectionError(f"Network error connecting to {url}: {e}") from e
+            except httpx.TimeoutException as e:
+                logger.warning("Timeout error calling %s after %.1fs: %s. Retrying...", url, self.timeout_seconds, e)
+                raise RAGTimeoutError(f"Request to {url} timed out: {e}") from e
+            except httpx.RequestError as e:
+                logger.error("Non-recoverable HTTP request error calling %s: %s", url, e)
+                raise RAGConnectionError(f"HTTP request error: {e}") from e
+
+            latency_ms = (time.perf_counter() - start_time) * 1000.0
+
+            if response.status_code != 200:
+                logger.error("Query failed with HTTP %d: %s", response.status_code, response.text)
+                raise RAGResponseError(
+                    message=f"Query failed with HTTP {response.status_code}",
+                    status_code=response.status_code,
+                    response_body=response.text,
+                )
+
+            try:
+                raw_json = response.json()
+            except Exception as e:
+                logger.error("Malformed JSON response from target: %s", response.text[:200])
+                raise RAGResponseError(
+                    message=f"Target returned non-JSON response: {e}",
+                    status_code=response.status_code,
+                    response_body=response.text,
+                ) from e
+
+            # Normalize raw payload into canonical RAGResponse DTO
+            return normalize_target_response(raw_json, latency_ms=round(latency_ms, 2))
+
+        return _send()

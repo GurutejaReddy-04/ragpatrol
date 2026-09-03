@@ -1,0 +1,32 @@
+# Evaluation Harness Configuration
+# Secrets (e.g. CITEBASE_API_KEY, JUDGE_API_KEY) are strictly loaded from environment variables.
+
+target_api:
+  base_url: "http://127.0.0.1:8000"
+  timeout_seconds: 30.0
+  max_retries: 3
+  retry_backoff_factor: 1.5
+
+testset:
+  path: "testset/questions.yaml"
+
+storage:
+  database_url: "sqlite:///eval_runs.db"
+
+metrics:
+  retrieval:
+    min_precision: 0.70
+    min_recall: 0.70
+    min_f1: 0.70
+  faithfulness:
+    min_score: 0.75
+    embedding_weight: 0.4
+    llm_judge_weight: 0.6
+  latency:
+    max_p95_ms: 2500.0
+    max_p99_ms: 5000.0
+
+judge:
+  provider: "gemini"
+  model: "gemini-2.5-flash"
+  temperature: 0.0

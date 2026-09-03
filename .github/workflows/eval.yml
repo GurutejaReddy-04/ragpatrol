@@ -1,0 +1,37 @@
+name: LLM Evaluation & Regression Gate
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Import & Smoke Tests
+        run: |
+          python -m pytest tests/test_imports.py -v --tb=short
+
+      - name: Execute Evaluation Runner (Phase 0 Skeleton)
+        env:
+          CITEBASE_API_KEY: ${{ secrets.CITEBASE_API_KEY }}
+          JUDGE_API_KEY: ${{ secrets.JUDGE_API_KEY }}
+        run: |
+          python -m pytest tests/test_connectivity.py -v --tb=short
