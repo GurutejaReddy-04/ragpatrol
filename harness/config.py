@@ -9,13 +9,18 @@ import logging
 import os
 from pathlib import Path
 from typing import Any, Optional
+from dotenv import load_dotenv
 import yaml
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from harness.exceptions import ConfigValidationError
 
+# Load local environment variables (.env) if present
+load_dotenv()
+
 logger = logging.getLogger(__name__)
+
 
 
 class TargetAPIConfig(BaseModel):
