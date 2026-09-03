@@ -122,16 +122,33 @@ def normalize_citebase_response(raw_payload: dict[str, Any], latency_ms: float =
 
     normalized_chunks: list[RetrievedChunk] = []
     for idx, s in enumerate(citebase_data.sources):
-        # Resolve best-available chunk ID: explicit chunk_id > synthesized doc_page fallback
-        cid = s.chunk_id or f"{s.source}_p{s.page}_c{idx}"
+        # Resolve best-available chunk ID: prioritize doc_{col}_chunk_{page} format
+        if s.chunk_id and s.chunk_id.startswith("doc_"):
+            cid = s.chunk_id
+        elif s.collection_name and s.page:
+            cid = f"doc_{s.collection_name}_chunk_{s.page}"
+        elif s.source_type == "web":
+            cid = f"doc_{s.collection_name or 'web'}_chunk_ood"
+        elif s.chunk_id:
+            cid = s.chunk_id
+        else:
+            cid = f"{s.source}_p{s.page}_c{idx}"
+
         score = s.rerank_score if s.rerank_score is not None else s.score
+
+        # Extract text or descriptive context snippet from citation metadata
+        text_snippet = (
+            f"[Section: {s.section or 'General'} | Breadcrumb: {s.breadcrumb or 'General'} | "
+            f"Document: {s.doc_title or s.source} | Page: {s.page}]"
+        )
 
         chunk = RetrievedChunk(
             chunk_id=cid,
-            text="",  # CiteBase returns citations metadata; text can be enriched if requested
+            text=text_snippet,
             source_doc=s.doc_title or s.source,
             score=score,
             metadata={
+                "raw_chunk_id": s.chunk_id,
                 "page": s.page,
                 "source_type": s.source_type,
                 "collection_name": s.collection_name,
