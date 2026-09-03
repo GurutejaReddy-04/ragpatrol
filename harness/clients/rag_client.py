@@ -6,6 +6,7 @@ latency tracking, and automatic citation normalization.
 """
 
 import logging
+import os
 import time
 from typing import Any, Optional
 import httpx
@@ -113,6 +114,31 @@ class RAGClient:
         except httpx.RequestError as e:
             logger.error("Request error during health check: %s", e)
             raise RAGConnectionError(f"Target health check request error: {e}") from e
+
+    def flush_cache(self) -> bool:
+        """
+        Convenience method to flush target system's query cache.
+
+        Attempts to flush Redis cache directly. If unavailable,
+        logs a warning advising manual Redis cache flushing.
+        """
+        logger.info("Attempting to flush Redis query cache...")
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+        try:
+            import redis
+            r = redis.Redis.from_url(redis_url, socket_timeout=1.0)
+            r.flushdb()
+            logger.info("Successfully flushed Redis cache at %s", redis_url)
+            return True
+        except Exception as e:
+            logger.warning(
+                "Could not flush Redis cache automatically (%s). "
+                "Ensure Redis is flushed or container restarted before cold benchmarking.",
+                e,
+            )
+            return False
+
+
 
     def query(
         self,

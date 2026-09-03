@@ -138,7 +138,10 @@ LLM-Evaluation-Observability-Harness/
 │   └── validate_testset.py        # Dataset validation and invariant checker
 ├── tests/
 │   ├── test_connectivity.py       # Live health check & adapter tests
+│   ├── test_faithfulness.py       # Dual-signal faithfulness unit tests (mocked)
 │   ├── test_imports.py            # Complete import smoke test
+│   ├── test_latency.py            # Latency percentile & speedup unit tests
+│   ├── test_retrieval.py          # Set-based Precision, Recall, F1 unit tests
 │   └── test_testset.py            # Automated test set schema enforcement
 ├── config.yaml                    # Public configuration parameters
 ├── pytest.ini                     # Pytest defaults (-v --tb=short)
@@ -148,7 +151,7 @@ LLM-Evaluation-Observability-Harness/
 
 ---
 
-## Running Smoke Tests & Validation
+## Running Test Suite
 
 Activate the Python environment and run:
 
@@ -156,19 +159,26 @@ Activate the Python environment and run:
 # Validate testset invariants
 python testset/validate_testset.py
 
-# Run complete pytest test suite
+# Run complete pytest test suite (27 unit & smoke tests)
 python -m pytest
 ```
 
-Expected output:
-```text
-tests/test_connectivity.py::test_citebase_health_connectivity PASSED
-tests/test_connectivity.py::test_rag_client_with_mock_transport PASSED
-tests/test_connectivity.py::test_citebase_citation_adapter_normalization PASSED
-tests/test_connectivity.py::test_config_env_validation PASSED
-tests/test_imports.py::test_explicit_module_imports PASSED
-tests/test_imports.py::test_walk_packages_imports PASSED
-tests/test_testset.py::test_validate_testset_execution PASSED
-tests/test_testset.py::test_validate_testset_detailed PASSED
+---
+
+## Running Evaluation Harness CLI
+
+```bash
+# Stage 1: Classical Set-Based Retrieval Scoring
+python -m harness.runner --stage retrieval
+
+# Stage 2: Dual-Signal Faithfulness Scoring (Dry-run mode, embedding only)
+python -m harness.runner --stage faithfulness --dry-run
+
+# Stage 3: Dual-Signal Faithfulness Scoring (Live Gemini LLM Judge)
+python -m harness.runner --stage faithfulness
+
+# Stage 4: Full Pipeline with Cold vs. Warm Latency Comparison
+python -m harness.runner --stage all --cache-mode both
 ```
+
 
