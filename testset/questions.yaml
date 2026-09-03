@@ -1,23 +1,404 @@
-# Curated Evaluation Test Set (Schema v1.0)
-# Categories: easy (single direct chunk), ambiguous (multi-chunk), edge (out-of-domain / ungrounded)
+# ====================================================================
+# Curated Evaluation Test Set (Questions v1.0)
+#
+# Provenance: Derived from CiteBase benchmark dataset
+# Source: D:\Btech_Organized\Projects\Production RAG-as-a-Service — multi-tenant document intelligence API\tests\eval\benchmark_dataset.json
+# Reference: CiteBase EVALUATION_REPORT.md (25 held-out evaluation queries)
+#
+# Categories:
+#   - easy: single-page factual retrieval
+#   - ambiguous: multi-page / cross-collection retrieval
+#   - edge: out-of-domain queries testing web fallback / 'I don't know'
+# ====================================================================
 
-- id: "q001"
-  question: "What is the retry policy for failed embeddings?"
+- id: q01
+  question: What are the prerequisites and syllabus topics for Differential Calculus MA101?
   ground_truth_chunk_ids:
-    - "doc12_chunk3"
-  reference_answer: "Failed embedding calls are retried 3 times with exponential backoff."
-  category: "easy"
-
-- id: "q002"
-  question: "How does tenant collection isolation work in ChromaDB?"
+  - doc_test_hybrid_coll_chunk_12
+  - doc_test_hybrid_coll_chunk_44
+  reference_answer: 'Ground truth reference covering concepts: Differential Calculus, MA101, functions of single.'
+  category: ambiguous
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_course_syllabus
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - Differential Calculus
+    - MA101
+    - functions of single
+- id: q02
+  question: What is covered in the Nutrition and First Aid Injury Management curriculum?
   ground_truth_chunk_ids:
-    - "auth_arch_chunk1"
-    - "chroma_tenant_chunk2"
-  reference_answer: "Tenant collections are isolated using cryptographic tenant ID prefixing and separate collections."
-  category: "ambiguous"
-
-- id: "q003"
-  question: "What is the internal quantum computing architecture of the server?"
-  ground_truth_chunk_ids: []
-  reference_answer: "I do not have information regarding quantum computing architecture."
-  category: "edge"
+  - doc_test_hybrid_coll_chunk_24
+  reference_answer: 'Ground truth reference covering concepts: Nutrition, First Aid, Injury Management, Balanced Diet.'
+  category: easy
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_sports_nutrition
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - Nutrition
+    - First Aid
+    - Injury Management
+    - Balanced Diet
+- id: q03
+  question: How is steady state analysis of circuits for sinusoidal excitation computed in network theory?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_33
+  reference_answer: 'Ground truth reference covering concepts: STEADY STATE ANALYSIS, SINUSOIDAL EXCITATION, circuits.'
+  category: easy
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_circuit_theory
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - STEADY STATE ANALYSIS
+    - SINUSOIDAL EXCITATION
+    - circuits
+- id: q04
+  question: What are the guidelines to develop behaviour Verilog models for digital circuits?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_42
+  - doc_test_hybrid_coll_chunk_43
+  - doc_test_hybrid_coll_chunk_44
+  reference_answer: 'Ground truth reference covering concepts: Verilog, behaviour, digital.'
+  category: ambiguous
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_digital_vlsi
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - Verilog
+    - behaviour
+    - digital
+- id: q05
+  question: How do students determine and plot the frequency response of LSI systems in laboratory experiments?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_55
+  - doc_test_hybrid_coll_chunk_56
+  reference_answer: 'Ground truth reference covering concepts: frequency response, LSI systems, plot.'
+  category: ambiguous
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_signals_lab
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - frequency response
+    - LSI systems
+    - plot
+- id: q06
+  question: What optimization methods from Stephen Boyd Convex Optimization are covered in the syllabus?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_78
+  reference_answer: 'Ground truth reference covering concepts: Stephen Boyd, Convex optimization, Vandenberghe.'
+  category: easy
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_optimization_theory
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - Stephen Boyd
+    - Convex optimization
+    - Vandenberghe
+- id: q07
+  question: What experiments are performed with Vector Network Analyzer VNA demonstration and optical fiber loss?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_89
+  reference_answer: 'Ground truth reference covering concepts: Vector Network Analyzer, optical fibers, loss characteristics.'
+  category: easy
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_microwave_optics_lab
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - Vector Network Analyzer
+    - optical fibers
+    - loss characteristics
+- id: q08
+  question: What topics in Machine Learning An Algorithmic Perspective by Stephen Marsland are taught?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_102
+  reference_answer: 'Ground truth reference covering concepts: Machine Learning, Stephen Marsland, probability distributions.'
+  category: easy
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_machine_learning
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - Machine Learning
+    - Stephen Marsland
+    - probability distributions
+- id: q09
+  question: How is noise in AM Receiver using Envelope detection analyzed?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_118
+  - doc_test_hybrid_coll_chunk_137
+  reference_answer: 'Ground truth reference covering concepts: Noise, AM Receiver, Envelope detection.'
+  category: ambiguous
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_analog_comm
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - Noise
+    - AM Receiver
+    - Envelope detection
+- id: q10
+  question: What are the methods of Bioremediation of contaminated sites in environmental engineering?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_128
+  - doc_test_hybrid_coll_chunk_129
+  reference_answer: 'Ground truth reference covering concepts: Bioremediation, contaminated sites.'
+  category: ambiguous
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_environmental_studies
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - Bioremediation
+    - contaminated sites
+- id: q11
+  question: What optical properties like reflection, refraction, and absorption from Callister Materials Science are covered?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_144
+  reference_answer: 'Ground truth reference covering concepts: Optical properties, Reflection, Refraction, Absorption, Callister.'
+  category: easy
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_materials_science
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - Optical properties
+    - Reflection
+    - Refraction
+    - Absorption
+    - Callister
+- id: q12
+  question: What biomass conversion and renewable energy topics from Klass are in the syllabus?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_160
+  reference_answer: 'Ground truth reference covering concepts: Biomass, Klass, renewable.'
+  category: easy
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_renewable_energy
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - Biomass
+    - Klass
+    - renewable
+- id: q13
+  question: What ceramic processing principles from James S Reed are taught in materials science?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_175
+  - doc_test_hybrid_coll_chunk_176
+  reference_answer: 'Ground truth reference covering concepts: James S. Reed, Principles of Ceramics Processing.'
+  category: ambiguous
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_ceramics_processing
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - James S. Reed
+    - Principles of Ceramics Processing
+- id: q14
+  question: How are applications of science and technology used for Disaster Management and Geo-informatics?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_187
+  - doc_test_hybrid_coll_chunk_188
+  - doc_test_hybrid_coll_chunk_189
+  reference_answer: 'Ground truth reference covering concepts: Disaster Management, Geo-informatics, Applications of Science.'
+  category: ambiguous
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_disaster_management
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - Disaster Management
+    - Geo-informatics
+    - Applications of Science
+- id: q15
+  question: What is the cluster size N and co-channel reuse ratio formula in cellular networks?
+  ground_truth_chunk_ids:
+  - doc_telecom_architecture_coll_chunk_1
+  reference_answer: 'Ground truth reference covering concepts: cluster of N cells, reuse ratio, co-channel.'
+  category: easy
+  metadata:
+    collection_names:
+    - telecom_architecture_coll
+    query_type: fresh_telecom_cluster
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - cluster of N cells
+    - reuse ratio
+    - co-channel
+- id: q16
+  question: How do microcell splitting and handoff hysteresis prevent ping-pong effects?
+  ground_truth_chunk_ids:
+  - doc_telecom_architecture_coll_chunk_2
+  reference_answer: 'Ground truth reference covering concepts: microcell, cell splitting, hysteresis, handoff.'
+  category: easy
+  metadata:
+    collection_names:
+    - telecom_architecture_coll
+    query_type: fresh_telecom_handoff
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - microcell
+    - cell splitting
+    - hysteresis
+    - handoff
+- id: q17
+  question: What are the uplink and downlink frequency allocations for GEO and LEO satellites in EC412?
+  ground_truth_chunk_ids:
+  - doc_ece_curriculum_coll_chunk_1
+  reference_answer: 'Ground truth reference covering concepts: EC412, uplink, downlink, GEO, LEO.'
+  category: easy
+  metadata:
+    collection_names:
+    - ece_curriculum_coll
+    query_type: fresh_satellite_guide
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - EC412
+    - uplink
+    - downlink
+    - GEO
+    - LEO
+- id: q18
+  question: What are the maximum unambiguous range and Doppler frequency shift equations in EC413?
+  ground_truth_chunk_ids:
+  - doc_ece_curriculum_coll_chunk_2
+  reference_answer: 'Ground truth reference covering concepts: EC413, unambiguous range, Doppler.'
+  category: easy
+  metadata:
+    collection_names:
+    - ece_curriculum_coll
+    query_type: fresh_radar_guide
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - EC413
+    - unambiguous range
+    - Doppler
+- id: q19
+  question: Compare cellular co-channel interference ratio D/R with satellite path loss link budget equations.
+  ground_truth_chunk_ids:
+  - doc_telecom_architecture_coll_chunk_1
+  - doc_ece_curriculum_coll_chunk_1
+  reference_answer: 'Ground truth reference covering concepts: co-channel, link budget, path loss.'
+  category: ambiguous
+  metadata:
+    collection_names:
+    - telecom_architecture_coll
+    - ece_curriculum_coll
+    query_type: fresh_cross_collection
+    expected_retrieval_mode: local_document
+    ground_truth_keywords:
+    - co-channel
+    - link budget
+    - path loss
+- id: q20
+  question: What are quantum tunneling and bandgap characteristics in nanoscale heterojunctions?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_16
+  - doc_test_hybrid_coll_chunk_157
+  reference_answer: 'Ground truth reference covering concepts: quantum, bandgap, tunneling.'
+  category: ambiguous
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_middle_band
+    expected_retrieval_mode: blended
+    ground_truth_keywords:
+    - quantum
+    - bandgap
+    - tunneling
+- id: q21
+  question: What are the new language features and pattern matching syntax in Rust 2024 edition?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_ood
+  reference_answer: The requested information is out-of-domain and not covered by the local corpus.
+  category: edge
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_out_of_domain_web
+    expected_retrieval_mode: web_fallback
+    ground_truth_keywords:
+    - Rust 2024
+    - pattern matching
+    - edition
+- id: q22
+  question: How does PostgreSQL multi-version concurrency control MVCC vacuuming work?
+  ground_truth_chunk_ids:
+  - doc_telecom_architecture_coll_chunk_ood
+  reference_answer: The requested information is out-of-domain and not covered by the local corpus.
+  category: edge
+  metadata:
+    collection_names:
+    - telecom_architecture_coll
+    query_type: fresh_out_of_domain_web
+    expected_retrieval_mode: web_fallback
+    ground_truth_keywords:
+    - PostgreSQL
+    - MVCC
+    - vacuum
+- id: q23
+  question: What are the consensus mechanisms in Raft distributed state machine replication?
+  ground_truth_chunk_ids:
+  - doc_ece_curriculum_coll_chunk_ood
+  reference_answer: The requested information is out-of-domain and not covered by the local corpus.
+  category: edge
+  metadata:
+    collection_names:
+    - ece_curriculum_coll
+    query_type: fresh_out_of_domain_web
+    expected_retrieval_mode: web_fallback
+    ground_truth_keywords:
+    - Raft
+    - consensus
+    - state machine
+- id: q24
+  question: How does Apache Kafka partition rebalancing and consumer group leader election work?
+  ground_truth_chunk_ids:
+  - doc_test_hybrid_coll_chunk_ood
+  reference_answer: The requested information is out-of-domain and not covered by the local corpus.
+  category: edge
+  metadata:
+    collection_names:
+    - test_hybrid_coll
+    query_type: fresh_out_of_domain_web
+    expected_retrieval_mode: web_fallback
+    ground_truth_keywords:
+    - Kafka
+    - partition
+    - consumer group
+- id: q25
+  question: What are the architecture differences between Linux eBPF kernel tracing and user space probes?
+  ground_truth_chunk_ids:
+  - doc_telecom_architecture_coll_chunk_ood
+  reference_answer: The requested information is out-of-domain and not covered by the local corpus.
+  category: edge
+  metadata:
+    collection_names:
+    - telecom_architecture_coll
+    query_type: fresh_out_of_domain_web
+    expected_retrieval_mode: web_fallback
+    ground_truth_keywords:
+    - eBPF
+    - probes
+    - kernel

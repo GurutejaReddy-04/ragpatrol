@@ -88,6 +88,23 @@ Configuration is managed via `pydantic-settings` (`harness/config.py`).
 
 ---
 
+---
+
+## Test Set Provenance & Ground Truth Schema
+
+The evaluation harness uses a curated, version-controlled ground-truth test set located at [`testset/questions.yaml`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/testset/questions.yaml).
+
+### Provenance
+- **Source Corpus:** Derived from CiteBase's held-out 25-question benchmark dataset ([`benchmark_dataset.json`](file:///D:/Btech_Organized/Projects/Production%20RAG-as-a-Service%20%E2%80%94%20multi-tenant%20document%20intelligence%20API/tests/eval/benchmark_dataset.json)).
+- **Historical Context:** See CiteBase's original [`EVALUATION_REPORT.md`](file:///D:/Btech_Organized/Projects/Production%20RAG-as-a-Service%20%E2%80%94%20multi-tenant%20document%20intelligence%20API/EVALUATION_REPORT.md) for baseline hit rates and latency comparisons across the 205-page corpus.
+- **Mapping Script:** Generated using [`scripts/extract_citebase_testset.py`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/scripts/extract_citebase_testset.py).
+- **Invariants Checked by [`testset/validate_testset.py`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/testset/validate_testset.py):**
+  - No duplicate IDs.
+  - Every `ground_truth_chunk_ids` list is non-empty (`f"doc_{doc_id}_chunk_{page}"` or `f"doc_{doc_id}_chunk_ood"`).
+  - Categorization taxonomy: `easy` (single page), `ambiguous` (multi-page/cross-collection), and `edge` (out-of-domain web fallback).
+
+---
+
 ## Directory Structure
 
 ```
@@ -112,13 +129,17 @@ LLM-Evaluation-Observability-Harness/
 │   └── storage/
 │       ├── db.py                  # Database session manager
 │       └── models.py              # SQLAlchemy 2.0 ORM schemas
+├── scripts/
+│   └── extract_citebase_testset.py # Extracts and maps CiteBase eval benchmark
 ├── stub_app/
 │   └── fake_rag_api.py            # Standalone FastAPI mock RAG service
 ├── testset/
-│   └── questions.yaml             # Curated ground-truth questions
+│   ├── questions.yaml             # Curated ground-truth questions (25 items)
+│   └── validate_testset.py        # Dataset validation and invariant checker
 ├── tests/
 │   ├── test_connectivity.py       # Live health check & adapter tests
-│   └── test_imports.py            # Complete import smoke test
+│   ├── test_imports.py            # Complete import smoke test
+│   └── test_testset.py            # Automated test set schema enforcement
 ├── config.yaml                    # Public configuration parameters
 ├── pytest.ini                     # Pytest defaults (-v --tb=short)
 ├── requirements.txt               # Pinned dependencies
@@ -127,11 +148,15 @@ LLM-Evaluation-Observability-Harness/
 
 ---
 
-## Running Smoke Tests
+## Running Smoke Tests & Validation
 
 Activate the Python environment and run:
 
 ```bash
+# Validate testset invariants
+python testset/validate_testset.py
+
+# Run complete pytest test suite
 python -m pytest
 ```
 
@@ -143,4 +168,7 @@ tests/test_connectivity.py::test_citebase_citation_adapter_normalization PASSED
 tests/test_connectivity.py::test_config_env_validation PASSED
 tests/test_imports.py::test_explicit_module_imports PASSED
 tests/test_imports.py::test_walk_packages_imports PASSED
+tests/test_testset.py::test_validate_testset_execution PASSED
+tests/test_testset.py::test_validate_testset_detailed PASSED
 ```
+
