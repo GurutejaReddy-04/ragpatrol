@@ -1,0 +1,51 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Databases & Runtime Data
+*.db
+!fixtures/reference_eval_runs.db
+*.sqlite
+*.sqlite3
+
+# Generated Evaluation Reports & Artifacts
+reports/*
+!reports/.gitkeep
+
+# Environment
+.env
+.env.*
+.venv
+env/
+venv/
+ENV/
+
+# IDE Configuration
+.vscode/
+.idea/
+*.swp
+
+# Logs & Temporary Files
+*.log
+*.tmp
+*.temp
+*.bak
+*.orig
+*~
+.DS_Store
+Thumbs.db
+
+# Archives & Internal Planning
+.archive/
+plan.md
+PLAN.md
+03-*.md
+*.local.md
