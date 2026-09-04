@@ -117,9 +117,15 @@ def validate_testset(path: Path = DEFAULT_TESTSET_PATH) -> Tuple[bool, list[str]
     return is_valid, errors
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint for running test set validation."""
-    target_path = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_TESTSET_PATH
+    if argv is not None:
+        target_path = Path(argv[0]) if argv else DEFAULT_TESTSET_PATH
+    elif len(sys.argv) > 1 and Path(sys.argv[0]).name.endswith("validate_testset.py"):
+        target_path = Path(sys.argv[1])
+    else:
+        target_path = DEFAULT_TESTSET_PATH
+
     logger.info("Validating evaluation testset at: %s", target_path)
 
     is_valid, errors = validate_testset(target_path)

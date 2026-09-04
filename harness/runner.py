@@ -23,6 +23,8 @@ from pydantic import BaseModel, Field
 from harness.clients.rag_client import RAGClient
 from harness.config import HarnessSettings, get_settings
 from harness.reporting.comparison_report import ComparisonReporter
+from harness.reporting.html_report import HTMLReportGenerator
+from harness.reporting.markdown_report import MarkdownReportGenerator
 from harness.scorers.faithfulness import FaithfulnessResult, FaithfulnessScorer
 from harness.scorers.latency import LatencyProfile, LatencyProfiler
 from harness.scorers.retrieval import RetrievalResult, RetrievalScorer
@@ -514,6 +516,81 @@ class EvaluationRunner:
         ComparisonReporter.print_comparison_report(report)
         return report
 
+    def save_run_report(
+        self,
+        run_result: StageRunResult,
+        format_type: str = "both",
+        cold_result: Optional[StageRunResult] = None,
+    ) -> list[Path]:
+        """Save Markdown and/or HTML reports to reports/ directory."""
+        reports_dir = Path("reports")
+        reports_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        saved_paths: list[Path] = []
+
+        if format_type in ("markdown", "both"):
+            md_path = reports_dir / f"run_{run_result.config_name}_{timestamp}.md"
+            md_content = MarkdownReportGenerator.generate_run_report(
+                run=run_result,
+                git_commit_sha=get_git_commit_sha(),
+                cold_run=cold_result,
+            )
+            with open(md_path, "w", encoding="utf-8") as f:
+                f.write(md_content)
+            logger.info("Saved Markdown report to %s", md_path)
+            saved_paths.append(md_path)
+
+        if format_type in ("html", "both"):
+            html_path = reports_dir / f"run_{run_result.config_name}_{timestamp}.html"
+            html_content = HTMLReportGenerator.generate_run_report(
+                run=run_result,
+                git_commit_sha=get_git_commit_sha(),
+                cold_run=cold_result,
+            )
+            with open(html_path, "w", encoding="utf-8") as f:
+                f.write(html_content)
+            logger.info("Saved HTML report to %s", html_path)
+            saved_paths.append(html_path)
+
+        return saved_paths
+
+    def save_comparison_report(
+        self,
+        comparison: dict[str, Any],
+        format_type: str = "both",
+    ) -> list[Path]:
+        """Save comparison Markdown and/or HTML reports to reports/ directory."""
+        reports_dir = Path("reports")
+        reports_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        cfg_a = comparison.get("config_a_name", "configA")
+        cfg_b = comparison.get("config_b_name", "configB")
+        saved_paths: list[Path] = []
+
+        if format_type in ("markdown", "both"):
+            md_path = reports_dir / f"comparison_{cfg_a}_vs_{cfg_b}_{timestamp}.md"
+            md_content = MarkdownReportGenerator.generate_comparison_report(
+                comparison=comparison,
+                git_commit_sha=get_git_commit_sha(),
+            )
+            with open(md_path, "w", encoding="utf-8") as f:
+                f.write(md_content)
+            logger.info("Saved comparison Markdown report to %s", md_path)
+            saved_paths.append(md_path)
+
+        if format_type in ("html", "both"):
+            html_path = reports_dir / f"comparison_{cfg_a}_vs_{cfg_b}_{timestamp}.html"
+            html_content = HTMLReportGenerator.generate_comparison_report(
+                comparison=comparison,
+                git_commit_sha=get_git_commit_sha(),
+            )
+            with open(html_path, "w", encoding="utf-8") as f:
+                f.write(html_content)
+            logger.info("Saved comparison HTML report to %s", html_path)
+            saved_paths.append(html_path)
+
+        return saved_paths
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="LLM Evaluation & Observability Harness Runner")
@@ -550,6 +627,12 @@ def main() -> None:
         metavar=("CONFIG_A", "CONFIG_B"),
         help="Compare two named configurations side-by-side.",
     )
+    parser.add_argument(
+        "--report",
+        choices=["markdown", "html", "both", "none"],
+        default="both",
+        help="Export report format (markdown, html, both, or none). Default: both.",
+    )
     args = parser.parse_args()
 
     runner = EvaluationRunner()
@@ -564,6 +647,8 @@ def main() -> None:
             cache_mode=args.cache_mode if args.cache_mode != "both" else "warm",
             testset_path=args.testset,
         )
+        if args.report != "none":
+            runner.save_comparison_report(report, format_type=args.report)
         sys.exit(0 if report.get("status") == "success" else 1)
 
     questions = runner.load_testset(args.testset)
@@ -597,7 +682,17 @@ def main() -> None:
     if args.cache_mode == "both" and cold_result and warm_result:
         runner.print_latency_comparison(cold_result, warm_result)
 
+    # Save artifact reports
+    target_result = warm_result or cold_result
+    if target_result and args.report != "none":
+        runner.save_run_report(
+            run_result=target_result,
+            format_type=args.report,
+            cold_result=cold_result if cold_result != target_result else None,
+        )
+
     sys.exit(0)
+
 
 
 

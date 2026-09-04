@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluation Report - default</title>
+    <style>
+:root {
+    --bg-main: #f8fafc;
+    --card-bg: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --accent-blue: #3b82f6;
+    --success-bg: #ecfdf5;
+    --success-text: #059669;
+    --warning-bg: #fffbeb;
+    --warning-text: #d97706;
+    --danger-bg: #fef2f2;
+    --danger-text: #dc2626;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    line-height: 1.5;
+    margin: 0;
+    padding: 32px 24px;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+h1 {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: var(--text-primary);
+}
+
+.meta-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.badge-blue { background: #eff6ff; color: #1d4ed8; }
+.badge-green { background: var(--success-bg); color: var(--success-text); }
+.badge-yellow { background: var(--warning-bg); color: var(--warning-text); }
+.badge-red { background: var(--danger-bg); color: var(--danger-text); }
+.badge-gray { background: #f1f5f9; color: #475569; }
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.kpi-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.kpi-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+}
+
+.kpi-value {
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 4px;
+    color: var(--text-primary);
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.card-title {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    color: var(--text-primary);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+th {
+    background: #f8fafc;
+    color: var(--text-secondary);
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+}
+
+td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+tr:hover td {
+    background-color: #f1f5f9;
+}
+
+details {
+    cursor: pointer;
+}
+
+details summary {
+    font-weight: 600;
+    color: var(--accent-blue);
+    padding: 8px 0;
+}
+
+.winner-pill {
+    font-weight: 700;
+    color: #15803d;
+    background: #f0fdf4;
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+@media print {
+    body { background: #ffffff !important; padding: 0 !important; color: #000 !important; }
+    .card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
+    table { break-inside: auto; }
+    tr { break-inside: avoid; }
+    details { open: true !important; }
+}
+</style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Evaluation Report: default</h1>
+            <div class="meta-bar">
+                <span>Timestamp: <strong>2026-09-04 13:10:36 UTC</strong></span>
+                <span class="badge badge-blue">Stage: all</span>
+                <span class="badge badge-gray">Cache: warm</span>
+                <span>Commit: <code>5c6f0814</code></span>
+                <span>Queries: <strong>25</strong></span>
+            </div>
+        </header>
+
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Precision</div>
+                <div class="kpi-value">16.0%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Recall</div>
+                <div class="kpi-value">16.0%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">F1 Score</div>
+                <div class="kpi-value">16.0%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Faithfulness</div>
+                <div class="kpi-value">39.5%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Latency p50</div>
+                <div class="kpi-value">50.1 ms</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Latency p95</div>
+                <div class="kpi-value">57.7 ms</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Category Breakdown</h2>
+            <table>
+                <thead>
+                    <tr><th>Category</th><th>Count</th><th>Precision</th><th>Recall</th><th>F1</th><th>Faithfulness</th><th>Hallucination Rate</th></tr>
+                </thead>
+                <tbody>
+                    
+            <tr>
+                <td><strong>ambiguous</strong></td>
+                <td>9.0</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>33.3%</td>
+                <td>77.8%</td>
+            </tr>
+            
+            <tr>
+                <td><strong>easy</strong></td>
+                <td>11.0</td>
+                <td>36.4%</td>
+                <td>36.4%</td>
+                <td>36.4%</td>
+                <td>41.1%</td>
+                <td>54.5%</td>
+            </tr>
+            
+            <tr>
+                <td><strong>edge</strong></td>
+                <td>5.0</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>46.9%</td>
+                <td>40.0%</td>
+            </tr>
+            
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Flagged Hallucinations & Low Faithfulness (15)</h2>
+            
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q01] What are the prerequisites and syllabus topics for Differential Calculus MA101?</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>1.0/5.0</strong> | Embedding Similarity: <strong>0.11</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q02] What is covered in the Nutrition and First Aid Injury Management curriculum?</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>1.0/5.0</strong> | Embedding Similarity: <strong>0.15</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q04] What are the guidelines to develop behaviour Verilog models for digital circuits?</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>1.0/5.0</strong> | Embedding Similarity: <strong>0.01</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q05] How do students determine and plot the frequency response of LSI systems in laboratory experiments?</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>1.0/5.0</strong> | Embedding Similarity: <strong>0.10</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q07] What experiments are performed with Vector Network Analyzer VNA demonstration and optical fiber loss?</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>2.4/5.0</strong> | Embedding Similarity: <strong>0.49</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q08] What topics in Machine Learning An Algorithmic Perspective by Stephen Marsland are taught?</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>1.0/5.0</strong> | Embedding Similarity: <strong>0.20</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q09] How is noise in AM Receiver using Envelope detection analyzed?</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>1.0/5.0</strong> | Embedding Similarity: <strong>0.10</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q10] What are the methods of Bioremediation of contaminated sites in environmental engineering?</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>2.5/5.0</strong> | Embedding Similarity: <strong>0.50</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q12] What biomass conversion and renewable energy topics from Klass are in the syllabus?</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>1.1/5.0</strong> | Embedding Similarity: <strong>0.22</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q14] How are applications of science and technology used for Disaster Management and Geo-informatics?</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>2.4/5.0</strong> | Embedding Similarity: <strong>0.47</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q17] What are the uplink and downlink frequency allocations for GEO and LEO satellites in EC412?</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>1.0/5.0</strong> | Embedding Similarity: <strong>0.16</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q18] What are the maximum unambiguous range and Doppler frequency shift equations in EC413?</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>1.0/5.0</strong> | Embedding Similarity: <strong>0.16</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q19] Compare cellular co-channel interference ratio D/R with satellite path loss link budget equations.</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>1.0/5.0</strong> | Embedding Similarity: <strong>0.19</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q22] How does PostgreSQL multi-version concurrency control MVCC vacuuming work?</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>1.0/5.0</strong> | Embedding Similarity: <strong>0.03</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+                <div style="border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #92400e;">[q25] What are the architecture differences between Linux eBPF kernel tracing and user space probes?</div>
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                        Judge Score: <strong>2.4/5.0</strong> | Embedding Similarity: <strong>0.48</strong>
+                    </div>
+                    <div style="font-size: 13px; font-style: italic; color: #64748b; margin-top: 4px;">
+                        Dry-run mode: evaluated via embedding similarity proxy.
+                    </div>
+                </div>
+                
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Question-Level Trace</h2>
+            <details>
+                <summary>Expand full table of 25 questions</summary>
+                <table style="margin-top: 12px;">
+                    <thead>
+                        <tr><th>ID</th><th>Category</th><th>Precision</th><th>Recall</th><th>F1</th><th>Faithfulness</th><th>Latency</th><th>Flagged</th></tr>
+                    </thead>
+                    <tbody>
+                        
+            <tr>
+                <td><code>q01</code></td>
+                <td><span class="badge badge-gray">ambiguous</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>16.5%</td>
+                <td>57.1 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q02</code></td>
+                <td><span class="badge badge-gray">easy</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>18.0%</td>
+                <td>31.4 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q03</code></td>
+                <td><span class="badge badge-gray">easy</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>57.6%</td>
+                <td>56.6 ms</td>
+                <td><span class="badge badge-green">NO</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q04</code></td>
+                <td><span class="badge badge-gray">ambiguous</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>12.2%</td>
+                <td>50.1 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q05</code></td>
+                <td><span class="badge badge-gray">ambiguous</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>15.9%</td>
+                <td>56.5 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q06</code></td>
+                <td><span class="badge badge-gray">easy</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>57.7%</td>
+                <td>47.0 ms</td>
+                <td><span class="badge badge-green">NO</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q07</code></td>
+                <td><span class="badge badge-gray">easy</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>48.3%</td>
+                <td>34.8 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q08</code></td>
+                <td><span class="badge badge-gray">easy</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>19.9%</td>
+                <td>47.4 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q09</code></td>
+                <td><span class="badge badge-gray">ambiguous</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>16.0%</td>
+                <td>51.4 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q10</code></td>
+                <td><span class="badge badge-gray">ambiguous</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>49.9%</td>
+                <td>31.1 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q11</code></td>
+                <td><span class="badge badge-gray">easy</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>55.8%</td>
+                <td>49.6 ms</td>
+                <td><span class="badge badge-green">NO</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q12</code></td>
+                <td><span class="badge badge-gray">easy</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>22.2%</td>
+                <td>28.0 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q13</code></td>
+                <td><span class="badge badge-gray">ambiguous</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>66.1%</td>
+                <td>47.0 ms</td>
+                <td><span class="badge badge-green">NO</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q14</code></td>
+                <td><span class="badge badge-gray">ambiguous</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>47.7%</td>
+                <td>52.1 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q15</code></td>
+                <td><span class="badge badge-gray">easy</span></td>
+                <td>100.0%</td>
+                <td>100.0%</td>
+                <td>100.0%</td>
+                <td>64.1%</td>
+                <td>54.6 ms</td>
+                <td><span class="badge badge-green">NO</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q16</code></td>
+                <td><span class="badge badge-gray">easy</span></td>
+                <td>100.0%</td>
+                <td>100.0%</td>
+                <td>100.0%</td>
+                <td>71.9%</td>
+                <td>57.8 ms</td>
+                <td><span class="badge badge-green">NO</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q17</code></td>
+                <td><span class="badge badge-gray">easy</span></td>
+                <td>100.0%</td>
+                <td>100.0%</td>
+                <td>100.0%</td>
+                <td>18.5%</td>
+                <td>42.3 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q18</code></td>
+                <td><span class="badge badge-gray">easy</span></td>
+                <td>100.0%</td>
+                <td>100.0%</td>
+                <td>100.0%</td>
+                <td>18.4%</td>
+                <td>53.3 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q19</code></td>
+                <td><span class="badge badge-gray">ambiguous</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>19.5%</td>
+                <td>45.3 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q20</code></td>
+                <td><span class="badge badge-gray">ambiguous</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>55.9%</td>
+                <td>53.7 ms</td>
+                <td><span class="badge badge-green">NO</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q21</code></td>
+                <td><span class="badge badge-gray">edge</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>53.9%</td>
+                <td>50.2 ms</td>
+                <td><span class="badge badge-green">NO</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q22</code></td>
+                <td><span class="badge badge-gray">edge</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>13.1%</td>
+                <td>57.3 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q23</code></td>
+                <td><span class="badge badge-gray">edge</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>57.6%</td>
+                <td>57.9 ms</td>
+                <td><span class="badge badge-green">NO</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q24</code></td>
+                <td><span class="badge badge-gray">edge</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>62.0%</td>
+                <td>48.6 ms</td>
+                <td><span class="badge badge-green">NO</span></td>
+            </tr>
+            
+            <tr>
+                <td><code>q25</code></td>
+                <td><span class="badge badge-gray">edge</span></td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>48.0%</td>
+                <td>49.9 ms</td>
+                <td><span class="badge badge-red">YES</span></td>
+            </tr>
+            
+                    </tbody>
+                </table>
+            </details>
+        </div>
+    </div>
+</body>
+</html>
