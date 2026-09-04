@@ -118,9 +118,7 @@ LLM-Evaluation-Observability-Harness/
 │   │   └── rag_client.py          # Tenacity-backed HTTP client adapter
 │   ├── config.py                  # Pydantic-settings config loader
 │   ├── exceptions.py              # Custom domain-specific exceptions
-│   ├── reporting/
-│   │   ├── html_report.py         # Self-contained HTML report renderer
-│   │   └── markdown_report.py     # GitHub-flavored Markdown report renderer
+│   ├── regression_check.py        # Automated quality regression detector & CI gate
 │   ├── runner.py                  # Evaluation orchestrator and CLI entrypoint
 │   ├── scorers/
 │   │   ├── faithfulness.py        # Faithfulness (embedding + LLM judge) scorer
@@ -141,6 +139,7 @@ LLM-Evaluation-Observability-Harness/
 │   ├── test_faithfulness.py       # Dual-signal faithfulness unit tests (mocked)
 │   ├── test_imports.py            # Complete import smoke test
 │   ├── test_latency.py            # Latency percentile & speedup unit tests
+│   ├── test_regression.py         # Regression gating unit tests (in-memory SQLite)
 │   ├── test_retrieval.py          # Set-based Precision, Recall, F1 unit tests
 │   └── test_testset.py            # Automated test set schema enforcement
 ├── config.yaml                    # Public configuration parameters
@@ -159,7 +158,7 @@ Activate the Python environment and run:
 # Validate testset invariants
 python testset/validate_testset.py
 
-# Run complete pytest test suite (27 unit & smoke tests)
+# Run complete pytest test suite (33 unit & smoke tests)
 python -m pytest
 ```
 
@@ -179,6 +178,10 @@ python -m harness.runner --stage faithfulness
 
 # Stage 4: Full Pipeline with Cold vs. Warm Latency Comparison
 python -m harness.runner --stage all --cache-mode both
+
+# Stage 5: Automated Quality Regression Gate (CI/CD check)
+python -m harness.regression_check --config default --stage all
 ```
+
 
 

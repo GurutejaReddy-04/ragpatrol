@@ -11,6 +11,9 @@ import logging
 import os
 import sys
 import time
+import subprocess
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 import yaml
@@ -21,12 +24,30 @@ from harness.config import HarnessSettings, get_settings
 from harness.scorers.faithfulness import FaithfulnessResult, FaithfulnessScorer
 from harness.scorers.latency import LatencyProfile, LatencyProfiler
 from harness.scorers.retrieval import RetrievalResult, RetrievalScorer
+from harness.storage.db import DatabaseManager
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger("eval_runner")
+
+
+def get_git_commit_sha() -> Optional[str]:
+    """Capture current HEAD git commit SHA if executing within a git repository."""
+    try:
+        res = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5,
+        )
+        return res.stdout.strip()
+    except Exception as e:
+        logger.warning("Could not resolve git commit SHA: %s", e)
+        return None
+
 
 
 class QuestionEvalSummary(BaseModel):
@@ -90,6 +111,7 @@ class EvaluationRunner:
             model_name=self.settings.judge.model,
         )
         self.latency_profiler = LatencyProfiler()
+        self.db = DatabaseManager(database_url=self.settings.storage.database_url)
         logger.info("EvaluationRunner initialized against target: %s", self.settings.target_api.base_url)
 
     def load_testset(self, testset_path: Optional[str] = None) -> list[dict[str, Any]]:
@@ -239,7 +261,7 @@ class EvaluationRunner:
                 "hallucination_rate": round(sum(1 for s in cat_items if s.is_hallucination) / cn, 4) if cn else 0.0,
             }
 
-        return StageRunResult(
+        run_res = StageRunResult(
             config_name=config_name,
             cache_state=cache_state,
             stage=stage,
@@ -256,6 +278,64 @@ class EvaluationRunner:
             category_metrics=cat_metrics,
             question_summaries=summaries,
         )
+
+        # Persist run and associated metrics to database
+        run_id = f"run_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
+        git_sha = get_git_commit_sha()
+
+        run_data = {
+            "id": run_id,
+            "timestamp": datetime.now(timezone.utc),
+            "config_name": config_name,
+            "git_commit_sha": git_sha,
+            "cache_state": cache_state,
+            "stage": stage,
+            "total_queries": run_res.total_queries,
+            "successful_queries": run_res.successful_queries,
+            "failed_queries": run_res.failed_queries,
+        }
+
+        metrics_data = [
+            {"metric_name": "retrieval_precision", "value": run_res.mean_precision, "category": None},
+            {"metric_name": "retrieval_recall", "value": run_res.mean_recall, "category": None},
+            {"metric_name": "retrieval_f1", "value": run_res.mean_f1, "category": None},
+            {"metric_name": "faithfulness_avg", "value": run_res.mean_faithfulness, "category": None},
+            {"metric_name": "hallucination_rate", "value": run_res.hallucination_rate, "category": None},
+            {"metric_name": "latency_p50", "value": run_res.latency_profile.p50_ms, "category": None},
+            {"metric_name": "latency_p95", "value": run_res.latency_profile.p95_ms, "category": None},
+            {"metric_name": "latency_p99", "value": run_res.latency_profile.p99_ms, "category": None},
+            {"metric_name": "latency_mean", "value": run_res.latency_profile.mean_ms, "category": None},
+        ]
+
+        for cat, vals in run_res.category_metrics.items():
+            metrics_data.append({"metric_name": "retrieval_precision", "value": vals["precision"], "category": cat})
+            metrics_data.append({"metric_name": "retrieval_recall", "value": vals["recall"], "category": cat})
+            metrics_data.append({"metric_name": "retrieval_f1", "value": vals["f1"], "category": cat})
+            metrics_data.append({"metric_name": "faithfulness_avg", "value": vals["faithfulness"], "category": cat})
+            metrics_data.append({"metric_name": "hallucination_rate", "value": vals["hallucination_rate"], "category": cat})
+
+        question_data = [
+            {
+                "question_id": s.id,
+                "precision": s.precision,
+                "recall": s.recall,
+                "f1": s.f1,
+                "faithfulness_score": s.faithfulness_score,
+                "latency_ms": s.latency_ms,
+                "hallucination_flag": s.is_hallucination,
+                "judge_reasoning": s.judge_reasoning,
+                "error_message": s.error_message,
+            }
+            for s in run_res.question_summaries
+        ]
+
+        try:
+            self.db.save_run(run_data, question_data, metrics_data)
+            logger.info("Persisted run '%s' to database.", run_id)
+        except Exception as e:
+            logger.error("Failed to persist evaluation run '%s' to database: %s", run_id, e)
+
+        return run_res
 
     def print_stage_report(self, run: StageRunResult) -> None:
         """Render readable ASCII evaluation report to stdout."""
