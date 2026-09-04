@@ -30,3 +30,16 @@ judge:
   provider: "gemini"
   model: "gemini-2.5-flash"
   temperature: 0.0
+
+configs:
+  reranker_on:
+    base_url: "http://127.0.0.1:8000"
+    env_overrides:
+      ENABLE_RERANKER: "true"
+      WEB_SEARCH_FALLBACK_THRESHOLD: "0.35"
+  reranker_off:
+    base_url: "http://127.0.0.1:8000"
+    env_overrides:
+      ENABLE_RERANKER: "false"
+      WEB_SEARCH_FALLBACK_THRESHOLD: "0.35"
+

@@ -13,6 +13,7 @@ import sys
 import time
 import subprocess
 import uuid
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
@@ -21,6 +22,7 @@ from pydantic import BaseModel, Field
 
 from harness.clients.rag_client import RAGClient
 from harness.config import HarnessSettings, get_settings
+from harness.reporting.comparison_report import ComparisonReporter
 from harness.scorers.faithfulness import FaithfulnessResult, FaithfulnessScorer
 from harness.scorers.latency import LatencyProfile, LatencyProfiler
 from harness.scorers.retrieval import RetrievalResult, RetrievalScorer
@@ -31,6 +33,24 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger("eval_runner")
+
+
+@contextmanager
+def apply_env_overrides(overrides: dict[str, str]):
+    """Temporarily apply environment variable overrides during an evaluation pass."""
+    original: dict[str, Optional[str]] = {}
+    for k, v in overrides.items():
+        original[k] = os.environ.get(k)
+        os.environ[k] = str(v)
+    try:
+        yield
+    finally:
+        for k, orig_val in original.items():
+            if orig_val is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = orig_val
+
 
 
 def get_git_commit_sha() -> Optional[str]:
@@ -396,6 +416,105 @@ class EvaluationRunner:
 
 
 
+    def run_comparison(
+        self,
+        config_a_name: str,
+        config_b_name: str,
+        stage: str = "all",
+        dry_run: bool = False,
+        cache_mode: str = "warm",
+        testset_path: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """
+        Execute full benchmark against two named configurations and output side-by-side comparison report.
+        """
+        questions = self.load_testset(testset_path)
+
+        cfg_a = self.settings.configs.get(config_a_name)
+        cfg_b = self.settings.configs.get(config_b_name)
+
+        base_url_a = cfg_a.base_url if cfg_a else self.settings.target_api.base_url
+        base_url_b = cfg_b.base_url if cfg_b else self.settings.target_api.base_url
+
+        overrides_a = cfg_a.env_overrides if cfg_a else {}
+        overrides_b = cfg_b.env_overrides if cfg_b else {}
+
+        res_a: Optional[StageRunResult] = None
+        error_a: Optional[str] = None
+        res_b: Optional[StageRunResult] = None
+        error_b: Optional[str] = None
+
+        # Pre-flight health checks to prevent zero-score confusion on offline endpoints
+        client_a = RAGClient(
+            base_url=base_url_a,
+            api_key=self.settings.citebase_api_key,
+            timeout_seconds=self.settings.target_api.timeout_seconds,
+            max_retries=1,
+        )
+        try:
+            client_a.check_health()
+        except Exception as e:
+            error_a = f"Cannot connect to target service at {base_url_a}: {e}"
+            logger.error("Pre-flight check failed for config '%s': %s", config_a_name, error_a)
+
+        client_b = RAGClient(
+            base_url=base_url_b,
+            api_key=self.settings.citebase_api_key,
+            timeout_seconds=self.settings.target_api.timeout_seconds,
+            max_retries=1,
+        )
+        try:
+            client_b.check_health()
+        except Exception as e:
+            error_b = f"Cannot connect to target service at {base_url_b}: {e}"
+            logger.error("Pre-flight check failed for config '%s': %s", config_b_name, error_b)
+
+        # Run Config A if reachable
+        if not error_a:
+            logger.info("=== Running Configuration A: '%s' (url=%s, overrides=%s) ===", config_a_name, base_url_a, overrides_a)
+            self.client = client_a
+            with apply_env_overrides(overrides_a):
+                try:
+                    res_a = self.execute_pass(
+                        questions=questions,
+                        stage=stage,
+                        cache_state=cache_mode,
+                        config_name=config_a_name,
+                        dry_run=dry_run,
+                    )
+                except Exception as e:
+                    error_a = f"Execution failed for '{config_a_name}': {e}"
+                    logger.error(error_a)
+
+        # Run Config B if reachable
+        if not error_b:
+            logger.info("=== Running Configuration B: '%s' (url=%s, overrides=%s) ===", config_b_name, base_url_b, overrides_b)
+            self.client = client_b
+            with apply_env_overrides(overrides_b):
+                try:
+                    res_b = self.execute_pass(
+                        questions=questions,
+                        stage=stage,
+                        cache_state=cache_mode,
+                        config_name=config_b_name,
+                        dry_run=dry_run,
+                    )
+                except Exception as e:
+                    error_b = f"Execution failed for '{config_b_name}': {e}"
+                    logger.error(error_b)
+
+        report = ComparisonReporter.compare(
+            config_a_name=config_a_name,
+            result_a=res_a,
+            config_b_name=config_b_name,
+            result_b=res_b,
+            error_a=error_a,
+            error_b=error_b,
+        )
+        ComparisonReporter.print_comparison_report(report)
+        return report
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="LLM Evaluation & Observability Harness Runner")
     parser.add_argument(
@@ -425,9 +544,28 @@ def main() -> None:
         default="testset/questions.yaml",
         help="Path to questions YAML dataset.",
     )
+    parser.add_argument(
+        "--compare",
+        nargs=2,
+        metavar=("CONFIG_A", "CONFIG_B"),
+        help="Compare two named configurations side-by-side.",
+    )
     args = parser.parse_args()
 
     runner = EvaluationRunner()
+
+    if args.compare:
+        config_a, config_b = args.compare
+        report = runner.run_comparison(
+            config_a_name=config_a,
+            config_b_name=config_b,
+            stage=args.stage,
+            dry_run=args.dry_run,
+            cache_mode=args.cache_mode if args.cache_mode != "both" else "warm",
+            testset_path=args.testset,
+        )
+        sys.exit(0 if report.get("status") == "success" else 1)
+
     questions = runner.load_testset(args.testset)
 
     cold_result: Optional[StageRunResult] = None
@@ -460,6 +598,7 @@ def main() -> None:
         runner.print_latency_comparison(cold_result, warm_result)
 
     sys.exit(0)
+
 
 
 if __name__ == "__main__":

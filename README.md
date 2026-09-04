@@ -119,6 +119,8 @@ LLM-Evaluation-Observability-Harness/
 │   ├── config.py                  # Pydantic-settings config loader
 │   ├── exceptions.py              # Custom domain-specific exceptions
 │   ├── regression_check.py        # Automated quality regression detector & CI gate
+│   ├── reporting/
+│   │   └── comparison_report.py   # Side-by-side configuration experiment reporter
 │   ├── runner.py                  # Evaluation orchestrator and CLI entrypoint
 │   ├── scorers/
 │   │   ├── faithfulness.py        # Faithfulness (embedding + LLM judge) scorer
@@ -135,6 +137,7 @@ LLM-Evaluation-Observability-Harness/
 │   ├── questions.yaml             # Curated ground-truth questions (25 items)
 │   └── validate_testset.py        # Dataset validation and invariant checker
 ├── tests/
+│   ├── test_comparison.py         # Side-by-side comparison unit tests
 │   ├── test_connectivity.py       # Live health check & adapter tests
 │   ├── test_faithfulness.py       # Dual-signal faithfulness unit tests (mocked)
 │   ├── test_imports.py            # Complete import smoke test
@@ -158,7 +161,7 @@ Activate the Python environment and run:
 # Validate testset invariants
 python testset/validate_testset.py
 
-# Run complete pytest test suite (33 unit & smoke tests)
+# Run complete pytest test suite (38 unit & smoke tests)
 python -m pytest
 ```
 
@@ -181,7 +184,11 @@ python -m harness.runner --stage all --cache-mode both
 
 # Stage 5: Automated Quality Regression Gate (CI/CD check)
 python -m harness.regression_check --config default --stage all
+
+# Stage 6: Side-by-Side Configuration Experiment Comparison
+python -m harness.runner --compare reranker_on reranker_off
 ```
+
 
 
 

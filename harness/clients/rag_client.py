@@ -170,10 +170,24 @@ class RAGClient:
         if extra_payload:
             payload.update(extra_payload)
 
+        # Check environment overrides (e.g. from comparison runner context manager)
+        enable_rerank_env = os.getenv("ENABLE_RERANKER")
+        if enable_rerank_env is not None and "enable_rerank" not in payload:
+            payload["enable_rerank"] = enable_rerank_env.lower() in ("true", "1", "yes")
+
+        web_thresh_env = os.getenv("WEB_SEARCH_FALLBACK_THRESHOLD")
+        if web_thresh_env is not None and "web_search_threshold" not in payload:
+            try:
+                payload["web_search_threshold"] = float(web_thresh_env)
+            except ValueError:
+                pass
+
         url = f"{self.base_url}/query"
-        logger.info("Querying target %s with question: %s", url, question[:60])
+        logger.info("Querying target %s with question: %s (enable_rerank=%s)",
+                    url, question[:60], payload.get("enable_rerank"))
 
         return self._execute_query_with_retry(url, payload)
+
 
     def _execute_query_with_retry(self, url: str, payload: dict[str, Any]) -> RAGResponse:
         """Internal dispatch with tenacity retry configuration."""

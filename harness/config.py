@@ -78,6 +78,12 @@ class JudgeConfig(BaseModel):
     temperature: float = Field(default=0.0, ge=0.0, le=1.0)
 
 
+class NamedConfig(BaseModel):
+    """Named configuration profile with target URL and runtime environment overrides."""
+    base_url: str = Field(default="http://127.0.0.1:8000", description="Target base URL.")
+    env_overrides: dict[str, str] = Field(default_factory=dict, description="Environment overrides for this config.")
+
+
 class HarnessSettings(BaseSettings):
     """
     Central evaluation harness settings.
@@ -97,6 +103,8 @@ class HarnessSettings(BaseSettings):
     storage: StorageConfig = Field(default_factory=StorageConfig)
     metrics: MetricsConfig = Field(default_factory=MetricsConfig)
     judge: JudgeConfig = Field(default_factory=JudgeConfig)
+    configs: dict[str, NamedConfig] = Field(default_factory=dict)
+
 
     # Secrets strictly mapped via environment variables
     citebase_api_key: Optional[str] = Field(
