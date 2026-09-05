@@ -168,17 +168,95 @@ def normalize_citebase_response(raw_payload: dict[str, Any], latency_ms: float =
     )
 
 
-def normalize_target_response(raw_payload: dict[str, Any], latency_ms: float = 0.0) -> RAGResponse:
+def normalize_stub_response(raw_payload: dict[str, Any], latency_ms: float = 0.0) -> RAGResponse:
+    """
+    Map the fake RAG API stub format into canonical RAGResponse and RetrievedChunk DTOs.
+
+    The stub uses:
+      - answer_text (maps to answer)
+      - sources: list of {doc: str, page: int, content: str} (maps to retrieved_chunks)
+      - response_time_ms: float (maps to latency_ms)
+    """
+    answer = str(raw_payload.get("answer_text", ""))
+    raw_sources = raw_payload.get("sources", [])
+
+    # Use response_time_ms from payload if present, otherwise fall back to measured latency_ms
+    payload_latency = raw_payload.get("response_time_ms")
+    effective_latency = float(payload_latency) if payload_latency is not None else latency_ms
+
+    normalized_chunks: list[RetrievedChunk] = []
+    for idx, s in enumerate(raw_sources):
+        if isinstance(s, dict):
+            doc = str(s.get("doc", f"doc_{idx}"))
+            page = s.get("page", 1)
+            content = str(s.get("content", ""))
+            score = float(s.get("score", 1.0)) if s.get("score") is not None else 1.0
+
+            # Normalize chunk_id to doc_<doc>_chunk_<page>
+            clean_doc = doc.replace("doc_", "") if doc.startswith("doc_") else doc
+            chunk_id = f"doc_{clean_doc}_chunk_{page}"
+
+            normalized_chunks.append(
+                RetrievedChunk(
+                    chunk_id=chunk_id,
+                    text=content,
+                    source_doc=doc,
+                    score=score,
+                    metadata={"doc": doc, "page": page, "adapter": "stub"},
+                )
+            )
+        elif isinstance(s, str):
+            normalized_chunks.append(
+                RetrievedChunk(
+                    chunk_id=s,
+                    text=s,
+                    source_doc="unknown",
+                    metadata={"adapter": "stub"},
+                )
+            )
+
+    return RAGResponse(
+        answer=answer,
+        retrieved_chunks=normalized_chunks,
+        latency_ms=round(effective_latency, 2),
+        retrieval_mode="stub_direct",
+        raw_response=raw_payload,
+    )
+
+
+def normalize_target_response(
+    raw_payload: dict[str, Any],
+    latency_ms: float = 0.0,
+    adapter: str = "auto",
+) -> RAGResponse:
     """
     Dispatch and normalize raw response dictionary into canonical RAGResponse DTO.
 
-    Detects if response originates from CiteBase (contains 'sources') or
-    conforms to the canonical harness schema (contains 'retrieved_chunks').
+    Supports:
+      - adapter="stub" or auto-detection if payload contains "answer_text"
+      - adapter="citebase" or auto-detection if payload contains "sources" with CiteBase schema
+      - canonical schema with "retrieved_chunks"
     """
-    if "sources" in raw_payload:
+    # 1. Explicit or auto-detected stub adapter
+    if adapter == "stub" or (adapter == "auto" and "answer_text" in raw_payload):
+        return normalize_stub_response(raw_payload, latency_ms=latency_ms)
+
+    # 2. Explicit CiteBase adapter or auto-detection
+    if adapter == "citebase" or (adapter == "auto" and "sources" in raw_payload and "answer" in raw_payload):
         return normalize_citebase_response(raw_payload, latency_ms=latency_ms)
 
-    # Standard / canonical contract schema
+    # 3. Disambiguate if payload contains 'sources' without 'answer'
+    if "sources" in raw_payload:
+        first_src = (
+            raw_payload["sources"][0]
+            if isinstance(raw_payload["sources"], list) and raw_payload["sources"]
+            else {}
+        )
+        if isinstance(first_src, dict) and "content" in first_src:
+            return normalize_stub_response(raw_payload, latency_ms=latency_ms)
+        return normalize_citebase_response(raw_payload, latency_ms=latency_ms)
+
+    # 4. Standard / canonical contract schema
     answer = raw_payload.get("answer", "")
     raw_chunks = raw_payload.get("retrieved_chunks", [])
     normalized_chunks: list[RetrievedChunk] = []

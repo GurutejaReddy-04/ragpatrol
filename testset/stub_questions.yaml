@@ -1,0 +1,56 @@
+# ====================================================================
+# Evaluation Test Set for Stub RAG Application (Phase 9 Generality Proof)
+#
+# Provenance: Dedicated 5-question test set evaluating the independent
+# stub API on port 8001 with alternative response schemas.
+# ====================================================================
+
+- id: stub_q01
+  question: How do coroutines and event loops work in Python asyncio?
+  ground_truth_chunk_ids:
+    - doc_asyncio_guide_chunk_1
+  reference_answer: Coroutines are declared with async def and executed cooperatively by an event loop using await.
+  category: easy
+  metadata:
+    topic: asyncio
+    expected_doc: asyncio_guide
+
+- id: stub_q02
+  question: What are B-tree indexes and how do they speed up database queries?
+  ground_truth_chunk_ids:
+    - doc_database_indexing_chunk_1
+  reference_answer: B-tree indexes maintain balanced tree nodes providing O(log n) time complexity for range queries.
+  category: easy
+  metadata:
+    topic: database_indexing
+    expected_doc: database_indexing
+
+- id: stub_q03
+  question: What are the core design principles of RESTful microservices?
+  ground_truth_chunk_ids:
+    - doc_microservices_api_chunk_1
+  reference_answer: RESTful microservices communicate over stateless HTTP protocols using standard JSON contracts.
+  category: easy
+  metadata:
+    topic: microservices
+    expected_doc: microservices_api
+
+- id: stub_q04
+  question: How does distributed cache invalidation work in Redis clusters?
+  ground_truth_chunk_ids:
+    - doc_redis_caching_chunk_1
+  reference_answer: Distributed caching with Redis offloads database workload by caching data with TTL expiration.
+  category: easy
+  metadata:
+    topic: redis_caching
+    expected_doc: redis_caching
+
+- id: stub_q05
+  question: How does Docker containerization differ from hypervisor virtualization?
+  ground_truth_chunk_ids:
+    - doc_container_virtualization_chunk_1
+  reference_answer: Docker provides process isolation by sharing host kernel namespaces rather than hardware emulation.
+  category: easy
+  metadata:
+    topic: container_virtualization
+    expected_doc: container_virtualization

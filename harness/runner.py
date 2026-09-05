@@ -118,13 +118,20 @@ class EvaluationRunner:
     Drives evaluation passes across target RAG endpoints.
     """
 
-    def __init__(self, settings: Optional[HarnessSettings] = None) -> None:
+    def __init__(
+        self,
+        settings: Optional[HarnessSettings] = None,
+        base_url: Optional[str] = None,
+        adapter: str = "auto",
+    ) -> None:
         self.settings = settings or get_settings()
+        target_base_url = base_url or self.settings.target_api.base_url
         self.client = RAGClient(
-            base_url=self.settings.target_api.base_url,
+            base_url=target_base_url,
             api_key=self.settings.citebase_api_key,
             timeout_seconds=self.settings.target_api.timeout_seconds,
             max_retries=self.settings.target_api.max_retries,
+            adapter=adapter,
         )
         self.retrieval_scorer = RetrievalScorer()
         self.faithfulness_scorer = FaithfulnessScorer(
@@ -134,7 +141,11 @@ class EvaluationRunner:
         )
         self.latency_profiler = LatencyProfiler()
         self.db = DatabaseManager(database_url=self.settings.storage.database_url)
-        logger.info("EvaluationRunner initialized against target: %s", self.settings.target_api.base_url)
+        logger.info(
+            "EvaluationRunner initialized against target: %s (adapter=%s)",
+            target_base_url,
+            self.client.adapter,
+        )
 
     def load_testset(self, testset_path: Optional[str] = None) -> list[dict[str, Any]]:
         """Load and parse test questions from YAML."""
@@ -633,9 +644,30 @@ def main() -> None:
         default="both",
         help="Export report format (markdown, html, both, or none). Default: both.",
     )
+    parser.add_argument(
+        "--adapter",
+        choices=["auto", "citebase", "stub"],
+        default="auto",
+        help="Client adapter for target RAG API (auto, citebase, or stub). Default: auto.",
+    )
+    parser.add_argument(
+        "--base-url",
+        default=None,
+        help="Override target API base URL (e.g., http://localhost:8001).",
+    )
     args = parser.parse_args()
 
-    runner = EvaluationRunner()
+    # Automatically route to stub testset if stub adapter is active and default testset was untouched
+    if args.adapter == "stub" and args.testset == "testset/questions.yaml":
+        stub_testset = Path("testset/stub_questions.yaml")
+        if stub_testset.exists():
+            args.testset = str(stub_testset)
+            logger.info("Automatically selected stub testset: %s", args.testset)
+
+    runner = EvaluationRunner(
+        base_url=args.base_url,
+        adapter=args.adapter,
+    )
 
     if args.compare:
         config_a, config_b = args.compare

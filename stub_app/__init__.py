@@ -1,1 +1,1 @@
-"""Stub application package for isolating and proving harness generality."""
+"""Stub RAG application package demonstrating generality across alternative API schemas."""

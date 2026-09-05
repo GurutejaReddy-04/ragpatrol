@@ -43,6 +43,7 @@ class RAGClient:
         timeout_seconds: float = 30.0,
         max_retries: int = 3,
         http_client: Optional[httpx.Client] = None,
+        adapter: str = "auto",
     ) -> None:
         """
         Initialize the RAG client adapter.
@@ -52,11 +53,17 @@ class RAGClient:
         :param timeout_seconds: Network read/write timeout in seconds.
         :param max_retries: Maximum attempts for transient network retries.
         :param http_client: Injected httpx.Client for testing or lifecycle reuse.
+        :param adapter: Adapter mode: 'auto', 'citebase', or 'stub'.
         """
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.timeout_seconds = timeout_seconds
         self.max_retries = max_retries
+
+        if adapter == "auto" and (":8001" in self.base_url or "/fake" in self.base_url or "/stub" in self.base_url):
+            self.adapter = "stub"
+        else:
+            self.adapter = adapter
 
         headers: dict[str, str] = {
             "Content-Type": "application/json",
@@ -234,6 +241,10 @@ class RAGClient:
                 ) from e
 
             # Normalize raw payload into canonical RAGResponse DTO
-            return normalize_target_response(raw_json, latency_ms=round(latency_ms, 2))
+            return normalize_target_response(
+                raw_json,
+                latency_ms=round(latency_ms, 2),
+                adapter=self.adapter,
+            )
 
         return _send()
