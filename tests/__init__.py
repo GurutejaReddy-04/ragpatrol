@@ -1,1 +1,1 @@
-"""Test suite for LLM Evaluation & Observability Harness."""
+"""Test suite for RAGPatrol (LLM Evaluation & Observability Harness)."""

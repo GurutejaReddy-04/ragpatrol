@@ -124,7 +124,7 @@ def test_rag_client_with_stub_adapter_mock_transport(sample_stub_payload: dict[s
         if request.url.path == "/health":
             return httpx.Response(
                 status_code=200,
-                json={"status": "ok", "service": "fake_rag_stub"},
+                json={"status": "ok", "service": "ragpatrol_stub"},
             )
         return httpx.Response(status_code=404)
 

@@ -118,7 +118,18 @@ def normalize_citebase_response(raw_payload: dict[str, Any], latency_ms: float =
     eval scorers treat CiteBase as a completely black-box system.
     """
     # We trust no one, so we validate everything
-    citebase_data = CiteBaseQueryResponse.model_validate(raw_payload)
+    try:
+        citebase_data = CiteBaseQueryResponse.model_validate(raw_payload)
+    except Exception as e:
+        import logging as _logging
+        _logger = _logging.getLogger(__name__)
+        _logger.error("CiteBase response validation failed: %s", e)
+        from harness.exceptions import RAGResponseError
+        raise RAGResponseError(
+            message=f"CiteBase response schema validation failed: {e}",
+            status_code=200,
+            response_body=str(raw_payload)[:500],
+        ) from e
 
     normalized_chunks: list[RetrievedChunk] = []
     for idx, s in enumerate(citebase_data.sources):
@@ -177,8 +188,20 @@ def normalize_stub_response(raw_payload: dict[str, Any], latency_ms: float = 0.0
       - sources: list of {doc: str, page: int, content: str} (maps to retrieved_chunks)
       - response_time_ms: float (maps to latency_ms)
     """
-    answer = str(raw_payload.get("answer_text", ""))
-    raw_sources = raw_payload.get("sources", [])
+    answer = str(raw_payload.get("answer_text") or raw_payload.get("answer") or "")
+    raw_sources = raw_payload.get("sources") or []
+
+    # EC-11: Validate that payload has at least one expected stub field
+    if "answer_text" not in raw_payload and "sources" not in raw_payload:
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "Stub adapter received payload with neither 'answer_text' nor 'sources'. "
+            "Schema mismatch suspected."
+        )
+        raise ValueError(
+            "Stub adapter received unrecognized payload schema — "
+            "expected 'answer_text' and/or 'sources' fields."
+        )
 
     # Use response_time_ms from payload if present, otherwise fall back to measured latency_ms
     payload_latency = raw_payload.get("response_time_ms")
@@ -257,8 +280,8 @@ def normalize_target_response(
         return normalize_citebase_response(raw_payload, latency_ms=latency_ms)
 
     # 4. Standard / canonical contract schema
-    answer = raw_payload.get("answer", "")
-    raw_chunks = raw_payload.get("retrieved_chunks", [])
+    answer = raw_payload.get("answer") or ""
+    raw_chunks = raw_payload.get("retrieved_chunks") or []
     normalized_chunks: list[RetrievedChunk] = []
 
     for rc in raw_chunks:

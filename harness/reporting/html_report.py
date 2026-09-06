@@ -257,13 +257,13 @@ class HTMLReportGenerator:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evaluation Report - {html.escape(run.config_name)}</title>
+    <title>RAGPatrol Evaluation Report - {html.escape(run.config_name)}</title>
     <style>{SHARED_CSS}</style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Evaluation Report: {html.escape(run.config_name)}</h1>
+            <h1>RAGPatrol Evaluation Report: {html.escape(run.config_name)}</h1>
             <div class="meta-bar">
                 <span>Timestamp: <strong>{html.escape(timestamp_str)}</strong></span>
                 <span class="badge badge-blue">Stage: {html.escape(run.stage)}</span>
@@ -402,13 +402,13 @@ class HTMLReportGenerator:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparison: {html.escape(cfg_a)} vs {html.escape(cfg_b)}</title>
+    <title>RAGPatrol Comparison: {html.escape(cfg_a)} vs {html.escape(cfg_b)}</title>
     <style>{SHARED_CSS}</style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Configuration Experiment: {html.escape(cfg_a)} vs {html.escape(cfg_b)}</h1>
+            <h1>RAGPatrol Configuration Experiment: {html.escape(cfg_a)} vs {html.escape(cfg_b)}</h1>
             <div class="meta-bar">
                 <span>Timestamp: <strong>{html.escape(timestamp_str)}</strong></span>
                 <span>Commit: <code>{html.escape(commit_str)}</code></span>

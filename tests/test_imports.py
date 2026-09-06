@@ -1,8 +1,8 @@
 """
-Smoke test verifying importability of all harness modules and stubs.
+Smoke test verifying importability of all RAGPatrol modules and stubs.
 
 Ensures no circular dependencies, syntax errors, or missing pinned requirements
-break the harness package from day zero.
+break the RAGPatrol package from day zero.
 """
 
 import importlib

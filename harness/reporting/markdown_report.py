@@ -39,7 +39,7 @@ class MarkdownReportGenerator:
         commit_str = f"`{git_commit_sha[:8]}`" if git_commit_sha else "`N/A`"
 
         lines: list[str] = [
-            f"# Evaluation Report: `{run.config_name}`",
+            f"# RAGPatrol Evaluation Report: `{run.config_name}`",
             "",
             "## Execution Metadata",
             "",
@@ -179,7 +179,7 @@ class MarkdownReportGenerator:
         winner = comparison["winner"]
 
         lines: list[str] = [
-            f"# Configuration Comparison: `{cfg_a}` vs `{cfg_b}`",
+            f"# RAGPatrol Configuration Comparison: `{cfg_a}` vs `{cfg_b}`",
             "",
             "## Experiment Summary",
             "",

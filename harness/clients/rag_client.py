@@ -197,33 +197,63 @@ class RAGClient:
 
 
     def _execute_query_with_retry(self, url: str, payload: dict[str, Any]) -> RAGResponse:
-        """Internal dispatch with tenacity retry configuration."""
+        """
+        Execute an HTTP POST query with tenacity-managed retries.
+
+        Retry strategy:
+        - Retries on transient network errors (httpx.ConnectError, ReadTimeout,
+          ConnectTimeout, NetworkError) via tenacity's exception type matching.
+        - Retries on transient HTTP status codes (429, 502, 503) by re-raising
+          the raw httpx exceptions for tenacity to intercept.
+        - Uses exponential backoff (1s → 2s → 4s … capped at 10s).
+        - After all retry attempts are exhausted, maps httpx exceptions into
+          domain-specific RAGConnectionError / RAGTimeoutError.
+
+        :param url: Fully qualified target endpoint URL.
+        :param payload: JSON-serializable query payload.
+        :return: Normalized RAGResponse DTO.
+        :raises RAGConnectionError: After all retries on network faults.
+        :raises RAGTimeoutError: After all retries on timeout faults.
+        :raises RAGResponseError: On non-retryable HTTP errors or malformed responses.
+        """
+        _RETRYABLE_STATUS_CODES = {429, 502, 503}
 
         @retry(
             reraise=True,
             stop=stop_after_attempt(self.max_retries),
             wait=wait_exponential(multiplier=1, min=1, max=10),
-            retry=retry_if_exception_type((httpx.ConnectError, httpx.ReadTimeout, httpx.ConnectTimeout)),
+            retry=retry_if_exception_type((
+                httpx.ConnectError,
+                httpx.ReadTimeout,
+                httpx.ConnectTimeout,
+                httpx.NetworkError,
+            )),
             before_sleep=before_sleep_log(logger, logging.WARNING),
         )
         def _send() -> RAGResponse:
             start_time = time.perf_counter()
-            try:
-                response = self._client.post(url, json=payload)
-            except (httpx.ConnectError, httpx.NetworkError) as e:
-                logger.warning("Transient network error calling %s: %s. Retrying...", url, e)
-                raise RAGConnectionError(f"Network error connecting to {url}: {e}") from e
-            except httpx.TimeoutException as e:
-                logger.warning("Timeout error calling %s after %.1fs: %s. Retrying...", url, self.timeout_seconds, e)
-                raise RAGTimeoutError(f"Request to {url} timed out: {e}") from e
-            except httpx.RequestError as e:
-                logger.error("Non-recoverable HTTP request error calling %s: %s", url, e)
-                raise RAGConnectionError(f"HTTP request error: {e}") from e
+            # Let httpx exceptions propagate naturally to tenacity for retry.
+            # Only wrap into custom exceptions after all retries are exhausted.
+            response = self._client.post(url, json=payload)
 
             latency_ms = (time.perf_counter() - start_time) * 1000.0
 
+            # Retry on transient HTTP status codes by raising a retryable
+            # httpx exception that tenacity recognizes.
+            if response.status_code in _RETRYABLE_STATUS_CODES:
+                logger.warning(
+                    "Retryable HTTP %d from %s. Retrying...",
+                    response.status_code, url,
+                )
+                raise httpx.ReadTimeout(
+                    f"Retryable HTTP {response.status_code}",
+                )
+
             if response.status_code != 200:
-                logger.error("Query failed with HTTP %d: %s", response.status_code, response.text)
+                logger.error(
+                    "Query failed with HTTP %d: %s",
+                    response.status_code, response.text,
+                )
                 raise RAGResponseError(
                     message=f"Query failed with HTTP {response.status_code}",
                     status_code=response.status_code,
@@ -233,7 +263,10 @@ class RAGClient:
             try:
                 raw_json = response.json()
             except Exception as e:
-                logger.error("Malformed JSON response from target: %s", response.text[:200])
+                logger.error(
+                    "Malformed JSON response from target: %s",
+                    response.text[:200],
+                )
                 raise RAGResponseError(
                     message=f"Target returned non-JSON response: {e}",
                     status_code=response.status_code,
@@ -247,4 +280,14 @@ class RAGClient:
                 adapter=self.adapter,
             )
 
-        return _send()
+        try:
+            return _send()
+        except (httpx.ConnectError, httpx.NetworkError) as e:
+            logger.error("Network error calling %s after %d attempts: %s", url, self.max_retries, e)
+            raise RAGConnectionError(f"Network error connecting to {url}: {e}") from e
+        except httpx.TimeoutException as e:
+            logger.error("Timeout calling %s after %d attempts: %s", url, self.max_retries, e)
+            raise RAGTimeoutError(f"Request to {url} timed out: {e}") from e
+        except httpx.RequestError as e:
+            logger.error("HTTP request error calling %s: %s", url, e)
+            raise RAGConnectionError(f"HTTP request error: {e}") from e

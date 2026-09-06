@@ -15,7 +15,7 @@ problem, avoiding artificial zero-padding, index alignments, or label-space expl
 """
 
 import logging
-from typing import Any, Sequence
+from typing import Sequence
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -42,8 +42,8 @@ def compute_retrieval_metrics(
     :param ground_truth_ids: List of relevant ground truth chunk IDs.
     :return: Dictionary with precision, recall, and f1 scores.
     """
-    retrieved_set = set(retrieved_ids)
-    ground_truth_set = set(ground_truth_ids)
+    retrieved_set = set(str(x).strip() for x in retrieved_ids)
+    ground_truth_set = set(str(x).strip() for x in ground_truth_ids)
 
     tp = len(retrieved_set & ground_truth_set)
     precision = tp / len(retrieved_set) if retrieved_set else 0.0

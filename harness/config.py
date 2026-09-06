@@ -1,5 +1,5 @@
 """
-Configuration management using pydantic-settings.
+RAGPatrol configuration management using pydantic-settings.
 
 Loads baseline parameters from config.yaml while strictly injecting credentials
 (such as API keys) via environment variables to guarantee zero secret leakage.
@@ -33,6 +33,7 @@ class TargetAPIConfig(BaseModel):
 
 class TestsetConfig(BaseModel):
     """Location and metadata for the evaluation question dataset."""
+    __test__ = False
     path: str = Field(default="testset/questions.yaml", description="Path to versioned test questions YAML.")
 
 
@@ -86,7 +87,7 @@ class NamedConfig(BaseModel):
 
 class HarnessSettings(BaseSettings):
     """
-    Central evaluation harness settings.
+    RAGPatrol evaluation harness configuration settings.
 
     Reads baseline parameters from `config.yaml` and overlays sensitive secrets
     directly from system environment variables.

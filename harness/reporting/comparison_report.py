@@ -84,8 +84,10 @@ class ComparisonReporter:
 
         for metric_label, attr, higher_is_better, unit in cls.METRICS:
             if attr in ("p50_ms", "p95_ms", "p99_ms"):
-                val_a = getattr(result_a.latency_profile, attr, 0.0)
-                val_b = getattr(result_b.latency_profile, attr, 0.0)
+                lat_a = result_a.latency_profile if result_a.latency_profile else None
+                lat_b = result_b.latency_profile if result_b.latency_profile else None
+                val_a = getattr(lat_a, attr, 0.0) if lat_a else 0.0
+                val_b = getattr(lat_b, attr, 0.0) if lat_b else 0.0
             else:
                 val_a = getattr(result_a, attr, 0.0)
                 val_b = getattr(result_b, attr, 0.0)

@@ -38,6 +38,10 @@ class DatabaseManager:
             if parent_dir and not parent_dir.exists():
                 parent_dir.mkdir(parents=True, exist_ok=True)
 
+        # Apply SQLite-specific timeout to handle locked databases gracefully
+        if self.database_url.startswith("sqlite:") and "connect_args" not in engine_kwargs:
+            engine_kwargs.setdefault("connect_args", {"timeout": 30})
+
         self.engine = create_engine(self.database_url, **engine_kwargs)
         self.session_factory = sessionmaker(bind=self.engine, expire_on_commit=False)
         self.create_tables()
@@ -103,7 +107,7 @@ class DatabaseManager:
                             eval_run.metrics.append(
                                 RunMetric(
                                     metric_name=m["metric_name"],
-                                    value=float(m["value"]),
+                                    value=float(m["value"] if m["value"] is not None else 0.0),
                                     category=m.get("category"),
                                 )
                             )
@@ -111,8 +115,10 @@ class DatabaseManager:
                 session.add(eval_run)
 
             session.refresh(eval_run)
-            logger.info("Persisted EvalRun %s with %d metrics and %d question records.",
-                        eval_run.id, len(eval_run.metrics), len(eval_run.question_results))
+            logger.info(
+                "Persisted EvalRun %s with %d metrics and %d question records.",
+                eval_run.id, len(eval_run.metrics), len(eval_run.question_results),
+            )
             return eval_run
 
     def get_latest_run(self, config_name: str = "default", stage: str = "all") -> Optional[EvalRun]:

@@ -1,23 +1,24 @@
 """
-Fake RAG API Stub Application.
+RAGPatrol Fake RAG API Stub Application.
 
 Implements an independent RAG service on port 8001 that deliberately exposes
-an alternative schema to prove that the evaluation harness is general-purpose
+an alternative schema to prove that RAGPatrol is general-purpose
 and decoupled from any single vendor's API contract.
 
 Alternative schema:
-- /health: {"status": "ok", "service": "fake_rag_stub"}
+- /health: {"status": "ok", "service": "ragpatrol_stub"}
 - /query: returns {"answer_text": "...", "sources": [{"doc": "...", "page": 1, "content": "..."}], "response_time_ms": float}
 """
 
 import time
 from typing import Any, Optional
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 app = FastAPI(
-    title="Fake RAG API Stub",
-    description="Independent mock RAG API with alternative schema for generality proof.",
+    title="RAGPatrol Fake RAG API Stub",
+    description="Independent mock RAG API with alternative schema for RAGPatrol generality verification.",
     version="1.0.0",
 )
 
@@ -116,16 +117,29 @@ KNOWLEDGE_STORE: list[dict[str, Any]] = [
 @app.get("/health")
 def health_check() -> dict[str, str]:
     """Liveness probe returning HTTP 200 OK."""
-    return {"status": "ok", "service": "fake_rag_stub"}
+    return {"status": "ok", "service": "ragpatrol_stub"}
 
 
 @app.post("/query", response_model=StubQueryResponse)
-def query_knowledge_base(request: StubQueryRequest) -> StubQueryResponse:
+def query_knowledge_base(
+    request: StubQueryRequest,
+    simulate_error: Optional[int] = Query(
+        default=None,
+        description="Simulate HTTP error for robustness testing (e.g., 500, 429, 503).",
+    ),
+) -> StubQueryResponse:
     """
     Deterministic retrieval against in-memory knowledge store.
 
     Matches query keywords and returns response in alternative schema.
+    Supports ?simulate_error=<code> for robustness testing.
     """
+    if simulate_error is not None:
+        return JSONResponse(
+            status_code=simulate_error,
+            content={"error": f"Simulated HTTP {simulate_error} error"},
+        )
+
     start_time = time.perf_counter()
     query_lower = request.question.lower()
 

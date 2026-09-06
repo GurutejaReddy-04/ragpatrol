@@ -1,0 +1,46 @@
+[project]
+name = "ragpatrol"
+version = "0.1.0"
+description = "LLM Evaluation & Observability Harness"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "GURUTEJAREDDY" }
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["harness", "tests", "stub_app", "scripts"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "B008",  # do not perform function calls in argument defaults (FastAPI uses this)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["harness"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+addopts = "-v --tb=short"
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = ["ignore::DeprecationWarning"]

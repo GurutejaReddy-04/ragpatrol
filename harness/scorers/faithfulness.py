@@ -16,6 +16,8 @@ import numpy as np
 from pydantic import BaseModel, Field
 from sentence_transformers import SentenceTransformer, util
 
+from harness.exceptions import EmbeddingModelError
+
 logger = logging.getLogger(__name__)
 
 # Global singleton for sentence-transformers model
@@ -31,7 +33,16 @@ def get_embedding_model() -> SentenceTransformer:
         with _EMBEDDING_LOCK:
             if _EMBEDDING_MODEL is None:
                 logger.info("Loading sentence-transformers model: %s", _EMBEDDING_MODEL_NAME)
-                _EMBEDDING_MODEL = SentenceTransformer(_EMBEDDING_MODEL_NAME)
+                try:
+                    _EMBEDDING_MODEL = SentenceTransformer(_EMBEDDING_MODEL_NAME)
+                except Exception as e:
+                    logger.error(
+                        "Failed to load embedding model '%s': %s",
+                        _EMBEDDING_MODEL_NAME, e,
+                    )
+                    raise EmbeddingModelError(
+                        f"Cannot load embedding model '{_EMBEDDING_MODEL_NAME}': {e}"
+                    ) from e
     return _EMBEDDING_MODEL
 
 
@@ -95,6 +106,10 @@ class FaithfulnessScorer:
         :return: (normalized_similarity_in_0_to_1, latency_ms)
         """
         t0 = time.perf_counter()
+        if not answer or not context_text:
+            if not answer:
+                logger.warning("Empty or None answer provided to embedding similarity.")
+            return 0.0, (time.perf_counter() - t0) * 1000.0
         if not answer.strip() or not context_text.strip():
             return 0.0, (time.perf_counter() - t0) * 1000.0
 
@@ -241,16 +256,38 @@ class FaithfulnessScorer:
                 answer=answer,
             )
 
-        # 3. Combined Score: 0.4 * emb + 0.6 * (judge / 5.0)
-        # Hyperparameters are explicitly tunable, not magic constants.
+        # 3. Combined Score with dynamic weight fallback.
+        # When the LLM judge is unavailable or failed, fall back to 100% embedding
+        # instead of contributing a misleading constant from the default score.
+        _JUDGE_FAILURE_MARKERS = (
+            "unconfigured", "unavailable", "failed after", "invocation error",
+        )
+        judge_failed = any(marker in reasoning.lower() for marker in _JUDGE_FAILURE_MARKERS)
+
+        if judge_failed and not dry_run:
+            logger.warning(
+                "LLM judge unavailable — falling back to 100%% embedding weight."
+            )
+            effective_emb_weight = 1.0
+            effective_judge_weight = 0.0
+        else:
+            effective_emb_weight = self.embedding_weight
+            effective_judge_weight = self.llm_judge_weight
+
         normalized_judge = judge_score / 5.0
         combined_score = round(
-            (self.embedding_weight * emb_sim) + (self.llm_judge_weight * normalized_judge),
+            (effective_emb_weight * emb_sim) + (effective_judge_weight * normalized_judge),
             4,
         )
 
         # 4. Hallucination Flagging
-        is_hallucination = (judge_score <= self.judge_score_threshold) or (emb_sim < self.embedding_threshold)
+        # Also flag as hallucination when the judge is unavailable, because the
+        # absence of verification is itself a reliability concern.
+        is_hallucination = (
+            (judge_score <= self.judge_score_threshold)
+            or (emb_sim < self.embedding_threshold)
+            or judge_failed
+        )
 
         return FaithfulnessResult(
             faithfulness_score=combined_score,

@@ -1,4 +1,4 @@
-# Core Evaluation Harness Dependencies
+# RAGPatrol — Core Dependencies
 pydantic>=2.5.0
 pydantic-settings>=2.0.0
 httpx>=0.27.0

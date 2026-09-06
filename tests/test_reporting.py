@@ -83,7 +83,7 @@ def test_markdown_run_report_structure(sample_stage_result: StageRunResult) -> N
     """Verify Markdown report contains all required headers, tables, and sections."""
     md = MarkdownReportGenerator.generate_run_report(sample_stage_result, git_commit_sha="abcdef123456")
 
-    assert "# Evaluation Report: `reranker_on`" in md
+    assert "# RAGPatrol Evaluation Report: `reranker_on`" in md
     assert "## Execution Metadata" in md
     assert "`abcdef12`" in md
     assert "## Summary Quality Metrics" in md
@@ -106,7 +106,7 @@ def test_html_run_report_structure(sample_stage_result: StageRunResult) -> None:
     html_doc = HTMLReportGenerator.generate_run_report(sample_stage_result, git_commit_sha="abcdef123456")
 
     assert "<!DOCTYPE html>" in html_doc
-    assert "<title>Evaluation Report - reranker_on</title>" in html_doc
+    assert "<title>RAGPatrol Evaluation Report - reranker_on</title>" in html_doc
     # Zero external CDN links
     assert "cdn." not in html_doc
     assert "http://" not in html_doc and "https://" not in html_doc
@@ -126,7 +126,7 @@ def test_markdown_comparison_report(sample_stage_result: StageRunResult) -> None
     comp = ComparisonReporter.compare("cfg_a", sample_stage_result, "cfg_b", sample_stage_result)
     md = MarkdownReportGenerator.generate_comparison_report(comp, git_commit_sha="12345678")
 
-    assert "# Configuration Comparison: `cfg_a` vs `cfg_b`" in md
+    assert "# RAGPatrol Configuration Comparison: `cfg_a` vs `cfg_b`" in md
     assert "## Side-by-Side Metric Comparison" in md
     assert "| **Precision** |" in md
     assert "## Per-Category Performance Comparison" in md
@@ -138,7 +138,7 @@ def test_html_comparison_report(sample_stage_result: StageRunResult) -> None:
     html_doc = HTMLReportGenerator.generate_comparison_report(comp, git_commit_sha="12345678")
 
     assert "<!DOCTYPE html>" in html_doc
-    assert "Configuration Experiment: cfg_a vs cfg_b" in html_doc
+    assert "RAGPatrol Configuration Experiment: cfg_a vs cfg_b" in html_doc
     assert "Side-by-Side Metric Comparison" in html_doc
     assert "@media print" in html_doc
 

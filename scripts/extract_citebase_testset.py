@@ -1,8 +1,8 @@
 """
-Extract and adapt CiteBase benchmark queries into the evaluation harness format.
+Extract and adapt CiteBase benchmark queries into the RAGPatrol format.
 
 Reads the 25 held-out queries from CiteBase's test suite, normalizes document
-and page references into harness chunk IDs, categorizes query complexity, and
+and page references into RAGPatrol chunk IDs, categorizes query complexity, and
 emits testset/questions.yaml with provenance documentation.
 """
 
@@ -21,7 +21,9 @@ logging.basicConfig(
 logger = logging.getLogger("extract_testset")
 
 DEFAULT_CITEBASE_JSON = Path(
-    r"D:\Btech_Organized\Projects\Production RAG-as-a-Service — multi-tenant document intelligence API\tests\eval\benchmark_dataset.json"
+    r"D:\Btech_Organized\Projects"
+    r"\Production RAG-as-a-Service — multi-tenant document intelligence API"
+    r"\tests\eval\benchmark_dataset.json"
 )
 OUTPUT_YAML = Path("testset/questions.yaml")
 

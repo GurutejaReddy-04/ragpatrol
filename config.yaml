@@ -1,4 +1,4 @@
-# Evaluation Harness Configuration
+# RAGPatrol — LLM Evaluation & Observability Harness Configuration
 # Secrets (e.g. CITEBASE_API_KEY, JUDGE_API_KEY) are strictly loaded from environment variables.
 
 target_api:

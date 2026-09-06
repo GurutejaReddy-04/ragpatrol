@@ -1,5 +1,5 @@
 """
-LLM Evaluation & Observability Harness.
+RAGPatrol — LLM Evaluation & Observability Harness.
 
 A surgical regression gating tool for evaluating black-box RAG systems across
 retrieval accuracy, answer faithfulness, and latency percentiles.

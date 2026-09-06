@@ -1,5 +1,5 @@
 """
-Streamlit interactive observability dashboard for LLM Evaluation Harness (Phase 7).
+RAGPatrol — Streamlit interactive observability dashboard.
 
 Provides metric trend tracking over time, run inspection, and side-by-side configuration analysis.
 Run with: streamlit run harness/reporting/dashboard.py
@@ -10,8 +10,10 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy import select
 
-# Ensure harness is on Python path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+# Ensure harness is importable when running via `streamlit run harness/reporting/dashboard.py`
+_PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
 
 try:
     import streamlit as st
@@ -23,7 +25,8 @@ from harness.storage.db import DatabaseManager
 from harness.storage.models import EvalRun, RunMetric
 
 
-def load_data():
+def load_data() -> pd.DataFrame:
+    """Load all evaluation runs from the database into a Pandas DataFrame for dashboard rendering."""
     db = DatabaseManager()
     with db.get_session() as session:
         runs = session.scalars(select(EvalRun).order_by(EvalRun.timestamp.asc())).all()
@@ -45,9 +48,10 @@ def load_data():
     return pd.DataFrame(run_data)
 
 
-def main():
-    st.set_page_config(page_title="LLM Evaluation Dashboard", page_icon="📈", layout="wide")
-    st.title("📈 LLM Evaluation & Observability Dashboard")
+def main() -> None:
+    """Launch the Streamlit interactive observability dashboard."""
+    st.set_page_config(page_title="RAGPatrol Dashboard", page_icon="📈", layout="wide")
+    st.title("📈 RAGPatrol — LLM Evaluation & Observability Dashboard")
     st.markdown("Automated quality gating, latency profiling, and regression tracking over time.")
 
     df = load_data()

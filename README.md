@@ -1,6 +1,8 @@
-# LLM Evaluation & Observability Harness
+# RAGPatrol — LLM Evaluation & Observability Harness
 
-A surgical regression gating tool that evaluates black-box RAG systems (specifically [CiteBase](file:///D:/Btech_Organized/Projects/Production%20RAG-as-a-Service%20%E2%80%94%20multi-tenant%20document%20intelligence%20API)) across retrieval accuracy, answer faithfulness, and latency percentiles. It persists benchmark runs over time, supports side-by-side configuration comparisons, and gates CI/CD pipelines against regressions.
+> **Automated Quality Gating, Faithfulness Auditing, and Latency Profiling for Production RAG Systems**
+
+**RAGPatrol** (GitHub: `ragpatrol`) is a surgical regression gating and observability harness that evaluates black-box RAG systems (including [CiteBase](file:///D:/Btech_Organized/Projects/Production%20RAG-as-a-Service%20%E2%80%94%20multi-tenant%20document%20intelligence%20API) and independent architectures) across retrieval precision/recall/F1, answer faithfulness, and latency percentiles. It persists benchmark runs over time in SQLite/PostgreSQL, supports side-by-side configuration comparisons, and gates CI/CD pipelines against quality and performance regressions.
 
 ---
 
@@ -8,13 +10,13 @@ A surgical regression gating tool that evaluates black-box RAG systems (specific
 
 > [!IMPORTANT]
 > **Faithfulness is NOT fact-checking.**
-> Faithfulness scoring measures whether the generated answer is strictly grounded in the retrieved context chunks provided to the LLM. It does not perform independent open-world truth verification. Conflating these two concepts is a common pitfall this harness explicitly avoids.
+> Faithfulness scoring measures whether the generated answer is strictly grounded in the retrieved context chunks provided to the LLM. It does not perform independent open-world truth verification. Conflating these two concepts is a common pitfall that RAGPatrol explicitly avoids.
 
 ---
 
 ## Target API Contract
 
-The harness treats any evaluated RAG service as a black box adhering to this standard HTTP interface:
+RAGPatrol treats any evaluated RAG service as a black box adhering to this standard HTTP interface:
 
 ### 1. Health Probe
 - **Method:** `GET /health`
@@ -54,7 +56,7 @@ The harness treats any evaluated RAG service as a black box adhering to this sta
 
 Different RAG systems return disparate citation schemas. CiteBase, for instance, returns citations in a `sources` array with page numbers, document titles, rerank scores, and retrieval channels.
 
-The harness client adapter immediately normalizes incoming vendor payloads into canonical `RetrievedChunk` and `RAGResponse` DTOs:
+The RAGPatrol client adapter immediately normalizes incoming vendor payloads into canonical `RetrievedChunk` and `RAGResponse` DTOs:
 
 ```
 +-------------------------------------------------------------+
@@ -92,7 +94,7 @@ Configuration is managed via `pydantic-settings` (`harness/config.py`).
 
 ## Test Set Provenance & Ground Truth Schema
 
-The evaluation harness uses a curated, version-controlled ground-truth test set located at [`testset/questions.yaml`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/testset/questions.yaml).
+RAGPatrol uses a curated, version-controlled ground-truth test set located at [`testset/questions.yaml`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/testset/questions.yaml).
 
 ### Provenance
 - **Source Corpus:** Derived from CiteBase's held-out 25-question benchmark dataset ([`benchmark_dataset.json`](file:///D:/Btech_Organized/Projects/Production%20RAG-as-a-Service%20%E2%80%94%20multi-tenant%20document%20intelligence%20API/tests/eval/benchmark_dataset.json)).
@@ -108,7 +110,7 @@ The evaluation harness uses a curated, version-controlled ground-truth test set 
 ## Directory Structure
 
 ```
-LLM-Evaluation-Observability-Harness/
+ragpatrol/ (LLM-Evaluation-Observability-Harness/)
 ├── .github/
 │   └── workflows/
 │       └── eval.yml               # CI regression gating workflow
@@ -143,7 +145,9 @@ LLM-Evaluation-Observability-Harness/
 │   └── validate_testset.py        # Dataset validation and invariant checker
 ├── tests/
 │   ├── test_adapter.py            # Client adapter & stub normalization unit tests
+│   ├── test_audit_edge_cases.py   # Regression tests for all audit edge cases
 │   ├── test_comparison.py         # Side-by-side comparison unit tests
+│   ├── test_config.py             # Configuration & environment validation tests
 │   ├── test_connectivity.py       # Live health check & adapter tests
 │   ├── test_faithfulness.py       # Dual-signal faithfulness unit tests (mocked)
 │   ├── test_imports.py            # Complete import smoke test
@@ -151,8 +155,11 @@ LLM-Evaluation-Observability-Harness/
 │   ├── test_regression.py         # Regression gating unit tests (in-memory SQLite)
 │   ├── test_reporting.py          # Markdown & HTML report structure unit tests
 │   ├── test_retrieval.py          # Set-based Precision, Recall, F1 unit tests
+│   ├── test_runner.py             # Evaluation runner & CLI orchestration tests
+│   ├── test_storage.py            # Database manager & persistence tests
 │   └── test_testset.py            # Automated test set schema enforcement
 ├── config.yaml                    # Public configuration parameters
+├── pyproject.toml                 # Ruff, mypy, and build metadata (ragpatrol)
 ├── pytest.ini                     # Pytest defaults (-v --tb=short)
 ├── requirements.txt               # Pinned dependencies
 └── README.md
@@ -168,13 +175,13 @@ Activate the Python environment and run:
 # Validate testset invariants
 python testset/validate_testset.py
 
-# Run complete pytest test suite (49 unit & smoke tests)
+# Run complete pytest test suite (86 automated tests across 14 test suites)
 python -m pytest
 ```
 
 ---
 
-## Running Evaluation Harness CLI
+## Running RAGPatrol CLI
 
 ```bash
 # Stage 1: Classical Set-Based Retrieval Scoring
@@ -203,11 +210,11 @@ python -m harness.runner --report both
 
 ## Proving Generality
 
-A common pitfall in evaluation tooling is tight coupling to a single system's internal API contract. To prove that this harness is **truly vendor-agnostic**, we engineered an independent stub application (`stub_app/fake_rag_api.py`) exposing a deliberately different API schema, paired with a dedicated 5-question test set (`testset/stub_questions.yaml`).
+A common pitfall in evaluation tooling is tight coupling to a single system's internal API contract. To prove that RAGPatrol is **truly vendor-agnostic**, we engineered an independent stub application (`stub_app/fake_rag_api.py`) exposing a deliberately different API schema, paired with a dedicated 5-question test set (`testset/stub_questions.yaml`).
 
 ### Disparate Schema Comparison
 
-| Dimension | Production System (CiteBase) | Independent Stub (`fake_rag_api`) | Canonical Harness DTO |
+| Dimension | Production System (CiteBase) | Independent Stub (`fake_rag_api`) | Canonical RAGPatrol DTO |
 | :--- | :--- | :--- | :--- |
 | **Port / Endpoint** | `http://127.0.0.1:8000/query` | `http://127.0.0.1:8001/query` | Configurable / `--base-url` |
 | **Answer Key** | `"answer"` | `"answer_text"` | `RAGResponse.answer` |
@@ -216,7 +223,7 @@ A common pitfall in evaluation tooling is tight coupling to a single system's in
 
 ### Adapter & Auto-Detection Pattern
 
-The harness client adapter ([`harness/clients/rag_client.py`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/harness/clients/rag_client.py)) and normalization layer ([`harness/clients/contracts.py`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/harness/clients/contracts.py)) seamlessly bridge the gap:
+The RAGPatrol client adapter ([`harness/clients/rag_client.py`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/harness/clients/rag_client.py)) and normalization layer ([`harness/clients/contracts.py`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/harness/clients/contracts.py)) seamlessly bridge the gap:
 - **Explicit Flag**: `--adapter stub` forces stub normalization and automatically targets `testset/stub_questions.yaml`.
 - **Auto-Detection**: If the response payload contains `"answer_text"` or the target URL points to port `8001`, the adapter automatically normalizes the payload into standard `RetrievedChunk` and `RAGResponse` DTOs.
 
@@ -226,7 +233,7 @@ The harness client adapter ([`harness/clients/rag_client.py`](file:///d:/Btech_O
 # 1. Start the stub API in the background (port 8001)
 python -m stub_app.fake_rag_api
 
-# 2. Run the full evaluation harness against the stub
+# 2. Run the full RAGPatrol evaluation against the stub
 python -m harness.runner --adapter stub --base-url http://localhost:8001 --stage all
 ```
 
@@ -248,7 +255,7 @@ python -m harness.runner --adapter stub --base-url http://localhost:8001 --stage
 
 > [!NOTE]
 > **Generality Validation Guarantee:**
-> "This harness was validated against two independent systems: CiteBase and the stub app, proving it's a general-purpose evaluation tool."
+> "RAGPatrol was validated against two independent systems: CiteBase and the stub app, proving it is a general-purpose evaluation tool."
 
 
 

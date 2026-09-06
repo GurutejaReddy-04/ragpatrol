@@ -1,5 +1,5 @@
 """
-Central orchestrator for the LLM Evaluation & Observability Harness.
+RAGPatrol — Central orchestrator for the LLM Evaluation & Observability Harness.
 
 Coordinates test set loading, target client execution, multi-stage scoring
 (retrieval, faithfulness, latency percentiles), cold/warm cache comparison,
@@ -34,7 +34,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
-logger = logging.getLogger("eval_runner")
+logger = logging.getLogger("ragpatrol")
 
 
 @contextmanager
@@ -142,7 +142,7 @@ class EvaluationRunner:
         self.latency_profiler = LatencyProfiler()
         self.db = DatabaseManager(database_url=self.settings.storage.database_url)
         logger.info(
-            "EvaluationRunner initialized against target: %s (adapter=%s)",
+            "RAGPatrol EvaluationRunner initialized against target: %s (adapter=%s)",
             target_base_url,
             self.client.adapter,
         )
@@ -153,8 +153,14 @@ class EvaluationRunner:
         if not path.exists():
             raise FileNotFoundError(f"Testset file not found at {path}")
 
-        with open(path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+        except yaml.YAMLError as e:
+            from harness.exceptions import ConfigValidationError
+            raise ConfigValidationError(
+                f"Failed to parse testset YAML at {path}: {e}"
+            ) from e
 
         if not isinstance(data, list):
             raise ValueError(f"Expected a list of questions in {path}")
@@ -174,7 +180,7 @@ class EvaluationRunner:
         Execute an evaluation pass across the question dataset.
         """
         logger.info(
-            "=== Starting Evaluation Pass (stage=%s, cache=%s, queries=%d, dry_run=%s) ===",
+            "=== RAGPatrol: Starting Evaluation Pass (stage=%s, cache=%s, queries=%d, dry_run=%s) ===",
             stage,
             cache_state,
             len(questions),
@@ -341,11 +347,21 @@ class EvaluationRunner:
         ]
 
         for cat, vals in run_res.category_metrics.items():
-            metrics_data.append({"metric_name": "retrieval_precision", "value": vals["precision"], "category": cat})
-            metrics_data.append({"metric_name": "retrieval_recall", "value": vals["recall"], "category": cat})
-            metrics_data.append({"metric_name": "retrieval_f1", "value": vals["f1"], "category": cat})
-            metrics_data.append({"metric_name": "faithfulness_avg", "value": vals["faithfulness"], "category": cat})
-            metrics_data.append({"metric_name": "hallucination_rate", "value": vals["hallucination_rate"], "category": cat})
+            metrics_data.append(
+                {"metric_name": "retrieval_precision", "value": vals["precision"], "category": cat}
+            )
+            metrics_data.append(
+                {"metric_name": "retrieval_recall", "value": vals["recall"], "category": cat}
+            )
+            metrics_data.append(
+                {"metric_name": "retrieval_f1", "value": vals["f1"], "category": cat}
+            )
+            metrics_data.append(
+                {"metric_name": "faithfulness_avg", "value": vals["faithfulness"], "category": cat}
+            )
+            metrics_data.append(
+                {"metric_name": "hallucination_rate", "value": vals["hallucination_rate"], "category": cat}
+            )
 
         question_data = [
             {
@@ -375,16 +391,25 @@ class EvaluationRunner:
         print("\n" + "=" * 80)
         print(f" EVALUATION SUMMARY: Stage='{run.stage}' | Cache='{run.cache_state}' | Config='{run.config_name}'")
         print("=" * 80)
-        print(f" Total Queries: {run.total_queries} | Successful: {run.successful_queries} | Failed: {run.failed_queries}")
+        print(
+            f" Total Queries: {run.total_queries} | Successful: {run.successful_queries} | "
+            f"Failed: {run.failed_queries}"
+        )
         print(f" Mean Precision:     {run.mean_precision * 100:.1f}%")
         print(f" Mean Recall:        {run.mean_recall * 100:.1f}%")
         print(f" Mean F1:            {run.mean_f1 * 100:.1f}%")
         if run.stage in ("faithfulness", "latency", "all"):
             print(f" Mean Faithfulness:  {run.mean_faithfulness * 100:.1f}%")
-            print(f" Hallucination Rate: {run.hallucination_rate * 100:.1f}% ({run.hallucination_count}/{run.successful_queries})")
+            print(
+                f" Hallucination Rate: {run.hallucination_rate * 100:.1f}% "
+                f"({run.hallucination_count}/{run.successful_queries})"
+            )
 
         p = run.latency_profile
-        print(f" Latency Profile:    p50={p.p50_ms:.1f}ms | p95={p.p95_ms:.1f}ms | p99={p.p99_ms:.1f}ms | mean={p.mean_ms:.1f}ms (std={p.std_ms:.1f}ms)")
+        print(
+            f" Latency Profile:    p50={p.p50_ms:.1f}ms | p95={p.p95_ms:.1f}ms | "
+            f"p99={p.p99_ms:.1f}ms | mean={p.mean_ms:.1f}ms (std={p.std_ms:.1f}ms)"
+        )
         print("-" * 80)
 
         # Category Breakdown Table
@@ -420,12 +445,22 @@ class EvaluationRunner:
         c = cold.latency_profile
         w = warm.latency_profile
 
-        print("\n+" + "-" * 15 + "+" + "-" * 12 + "+" + "-" * 12 + "+" + "-" * 12 + "+" + "-" * 12 + "+" + "-" * 14 + "+")
-        print(f"| {'Cache State':<13} | {'p50 (ms)':<10} | {'p95 (ms)':<10} | {'p99 (ms)':<10} | {'Mean (ms)':<10} | {'Improvement':<12} |")
-        print("+" + "-" * 15 + "+" + "-" * 12 + "+" + "-" * 12 + "+" + "-" * 12 + "+" + "-" * 12 + "+" + "-" * 14 + "+")
-        print(f"| {'Cold':<13} | {c.p50_ms:>10.1f} | {c.p95_ms:>10.1f} | {c.p99_ms:>10.1f} | {c.mean_ms:>10.1f} | {'1.0x':>12} |")
-        print(f"| {'Warm':<13} | {w.p50_ms:>10.1f} | {w.p95_ms:>10.1f} | {w.p99_ms:>10.1f} | {w.mean_ms:>10.1f} | {comp['p50_speedup']:>11.1f}x |")
-        print("+" + "-" * 15 + "+" + "-" * 12 + "+" + "-" * 12 + "+" + "-" * 12 + "+" + "-" * 12 + "+" + "-" * 14 + "+")
+        sep = "+" + "-" * 15 + "+" + "-" * 12 + "+" + "-" * 12 + "+" + "-" * 12 + "+" + "-" * 12 + "+" + "-" * 14 + "+"
+        print("\n" + sep)
+        print(
+            f"| {'Cache State':<13} | {'p50 (ms)':<10} | {'p95 (ms)':<10} | "
+            f"{'p99 (ms)':<10} | {'Mean (ms)':<10} | {'Improvement':<12} |"
+        )
+        print(sep)
+        print(
+            f"| {'Cold':<13} | {c.p50_ms:>10.1f} | {c.p95_ms:>10.1f} | "
+            f"{c.p99_ms:>10.1f} | {c.mean_ms:>10.1f} | {'1.0x':>12} |"
+        )
+        print(
+            f"| {'Warm':<13} | {w.p50_ms:>10.1f} | {w.p95_ms:>10.1f} | "
+            f"{w.p99_ms:>10.1f} | {w.mean_ms:>10.1f} | {comp['p50_speedup']:>11.1f}x |"
+        )
+        print(sep)
 
 
 
@@ -484,7 +519,10 @@ class EvaluationRunner:
 
         # Run Config A if reachable
         if not error_a:
-            logger.info("=== Running Configuration A: '%s' (url=%s, overrides=%s) ===", config_a_name, base_url_a, overrides_a)
+            logger.info(
+                "=== Running Configuration A: '%s' (url=%s, overrides=%s) ===",
+                config_a_name, base_url_a, overrides_a,
+            )
             self.client = client_a
             with apply_env_overrides(overrides_a):
                 try:
@@ -501,7 +539,10 @@ class EvaluationRunner:
 
         # Run Config B if reachable
         if not error_b:
-            logger.info("=== Running Configuration B: '%s' (url=%s, overrides=%s) ===", config_b_name, base_url_b, overrides_b)
+            logger.info(
+                "=== Running Configuration B: '%s' (url=%s, overrides=%s) ===",
+                config_b_name, base_url_b, overrides_b,
+            )
             self.client = client_b
             with apply_env_overrides(overrides_b):
                 try:
@@ -604,7 +645,10 @@ class EvaluationRunner:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="LLM Evaluation & Observability Harness Runner")
+    """CLI entrypoint: parse arguments and execute the RAGPatrol evaluation pipeline."""
+    parser = argparse.ArgumentParser(
+        description="RAGPatrol — LLM Evaluation & Observability Harness",
+    )
     parser.add_argument(
         "--stage",
         choices=["retrieval", "faithfulness", "latency", "all"],
@@ -668,6 +712,14 @@ def main() -> None:
         base_url=args.base_url,
         adapter=args.adapter,
     )
+
+    # EH-2: Validate required environment credentials early
+    try:
+        runner.settings.validate_env(require_judge_key=(not args.dry_run))
+    except Exception as e:
+        logger.error("Environment validation failed: %s", e)
+        print(f"\n[ERROR] {e}", file=sys.stderr)
+        sys.exit(1)
 
     if args.compare:
         config_a, config_b = args.compare

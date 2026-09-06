@@ -1,5 +1,5 @@
 """
-Regression detection and quality gating module (Phase 5).
+RAGPatrol — Regression detection and quality gating module.
 
 Compares the latest evaluation run against historical baselines to flag
 statistically meaningful degradations in retrieval, faithfulness, or latency percentiles.
@@ -229,7 +229,10 @@ class RegressionChecker:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="LLM Evaluation Regression Checker")
+    """CLI entrypoint: execute RAGPatrol regression gate check against latest evaluation run."""
+    parser = argparse.ArgumentParser(
+        description="RAGPatrol — Automated Regression Checker & Quality Gate",
+    )
     parser.add_argument("--config", default="default", help="Configuration label.")
     parser.add_argument("--stage", default="all", help="Evaluation pipeline stage.")
     args = parser.parse_args()
