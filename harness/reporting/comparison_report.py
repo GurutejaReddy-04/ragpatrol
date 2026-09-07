@@ -73,8 +73,8 @@ class ComparisonReporter:
                 "category_comparison": {},
             }
 
-        assert result_a is not None
-        assert result_b is not None
+        if result_a is None or result_b is None:
+            raise ValueError("Comparison requires both result_a and result_b to be non-None.")
 
         # 2. Metric comparisons
         metrics_rows: list[dict[str, Any]] = []

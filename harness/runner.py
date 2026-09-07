@@ -9,6 +9,7 @@ and formatted terminal reporting.
 import argparse
 import logging
 import os
+import shutil
 import sys
 import time
 import subprocess
@@ -57,9 +58,12 @@ def apply_env_overrides(overrides: dict[str, str]):
 
 def get_git_commit_sha() -> Optional[str]:
     """Capture current HEAD git commit SHA if executing within a git repository."""
+    git_bin = shutil.which("git")
+    if not git_bin:
+        return None
     try:
-        res = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
+        res = subprocess.run(  # nosec B603
+            [git_bin, "rev-parse", "HEAD"],
             capture_output=True,
             text=True,
             check=True,

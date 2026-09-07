@@ -11,7 +11,7 @@ Alternative schema:
 """
 
 import time
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -127,7 +127,7 @@ def query_knowledge_base(
         default=None,
         description="Simulate HTTP error for robustness testing (e.g., 500, 429, 503).",
     ),
-) -> StubQueryResponse:
+) -> Union[StubQueryResponse, JSONResponse]:
     """
     Deterministic retrieval against in-memory knowledge store.
 

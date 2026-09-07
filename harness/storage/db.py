@@ -29,7 +29,8 @@ class DatabaseManager:
         :param database_url: Optional connection URL. Defaults to DATABASE_URL env var or sqlite:///eval_runs.db.
         :param engine_kwargs: Additional arguments passed to create_engine (e.g. poolclass, connect_args).
         """
-        self.database_url = database_url or os.getenv("DATABASE_URL", "sqlite:///eval_runs.db")
+        raw_url = database_url or os.getenv("DATABASE_URL") or "sqlite:///eval_runs.db"
+        self.database_url: str = str(raw_url)
 
         # Auto-create local directories for file-based SQLite databases
         if self.database_url.startswith("sqlite:///") and not self.database_url.startswith("sqlite:///:memory:"):

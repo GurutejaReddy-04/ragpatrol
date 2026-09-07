@@ -246,7 +246,7 @@ class FaithfulnessScorer:
             # Synthesize judge proxy from embedding similarity
             judge_score = max(1.0, min(5.0, round(emb_sim * 5.0, 1)))
             reasoning = "Dry-run mode: evaluated via embedding similarity proxy."
-            claims = []
+            claims: list[str] = []
             judge_lat = 0.0
             raw_judge = None
         else:
