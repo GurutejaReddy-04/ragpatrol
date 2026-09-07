@@ -5,6 +5,7 @@ Tests winner identification across quality and latency metrics, per-category bre
 tie handling, and graceful unreachable config detection.
 """
 
+from typing import Optional
 import pytest
 from harness.reporting.comparison_report import ComparisonReporter
 from harness.runner import StageRunResult
@@ -20,7 +21,7 @@ def create_sample_result(
     p50: float,
     p95: float,
     p99: float,
-    category_metrics: dict = None,
+    category_metrics: Optional[dict] = None,
     successful_queries: int = 25,
 ) -> StageRunResult:
     """Helper to build a StageRunResult fixture."""
