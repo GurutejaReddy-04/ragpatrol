@@ -219,7 +219,7 @@ A common pitfall in evaluation tooling is tight coupling to a single system's in
 | **Port / Endpoint** | `http://127.0.0.1:8000/query` | `http://127.0.0.1:8001/query` | Configurable / `--base-url` |
 | **Answer Key** | `"answer"` | `"answer_text"` | `RAGResponse.answer` |
 | **Citations List** | `"sources": [{"source", "page", ...}]` | `"sources": [{"doc", "page", "content"}]` | `RAGResponse.retrieved_chunks` |
-| **Latency Metric** | Harness wall-clock measurement | `"response_time_ms": float` | `RAGResponse.latency_ms` |
+| **Latency Metric** | RAGPatrol wall-clock measurement | `"response_time_ms": float` | `RAGResponse.latency_ms` |
 
 ### Adapter & Auto-Detection Pattern
 
