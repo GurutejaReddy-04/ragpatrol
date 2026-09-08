@@ -1,5 +1,5 @@
 """
-Unit tests for pure set-based retrieval scoring (Phase 2).
+Unit tests for pure set-based retrieval scoring.
 
 Tests hand-crafted fixtures locking in Precision, Recall, and F1 calculations.
 """

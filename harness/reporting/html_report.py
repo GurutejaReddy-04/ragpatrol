@@ -1,5 +1,5 @@
 """
-HTML evaluation report generator (Phase 7).
+HTML evaluation report generator.
 
 Renders standalone, zero-dependency HTML reports with embedded CSS styling.
 Follows a clean dashboard aesthetic with interactive CSS row-highlighting and print-to-PDF support.

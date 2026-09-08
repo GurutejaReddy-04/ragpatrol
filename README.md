@@ -42,6 +42,78 @@ This site provides a quick overview of the project, key features, and links to t
 
 ---
 
+## System Architecture
+
+```mermaid
+flowchart TD
+    subgraph InputTier ["Input & Benchmark Tier"]
+        TESTSET["Curated Evaluation Testset<br/>(questions.yaml / stub_questions.yaml)<br/>• Ground-Truth Chunks & Reference Answers"]
+    end
+
+    subgraph TargetTier ["Target Service Tier (Black Box)"]
+        TARGET["Evaluated RAG Service<br/>(HTTP REST API)<br/>• GET /health<br/>• POST /query"]
+    end
+
+    subgraph HarnessTier ["RAGPatrol Evaluation Engine"]
+        RUNNER["Evaluation Runner<br/>(harness/runner.py)<br/>• Orchestrator & CLI Entrypoint"]
+        ADAPTER["Client Adapter<br/>(contracts.py & rag_client.py)<br/>• Tenacity Retries & DTO Normalization"]
+
+        subgraph Scorers ["Evaluation Scorers"]
+            RETRIEVAL["Retrieval Scorer<br/>• Precision, Recall, F1"]
+            FAITHFUL["Dual-Signal Faithfulness<br/>• Local MiniLM Embedding<br/>• Gemini LLM Judge"]
+            LATENCY["Latency Profiler<br/>• p50, p95, p99 Percentiles<br/>• Cold vs. Warm Cache Speedup"]
+        end
+    end
+
+    subgraph PersistenceTier ["Storage & Regression Gating"]
+        SQL[("Relational Store<br/>(SQLite / PostgreSQL)<br/>• EvalRun & RunMetric Tables")]
+        GATE["Automated Regression Gate<br/>(regression_check.py)<br/>• CI Exit Code 0 / 1"]
+    end
+
+    subgraph OutputTier ["Reporting & Observability Tier"]
+        HTML["Standalone HTML Report<br/>(Embedded CSS & KPI Cards)"]
+        MD["Markdown Report<br/>(GitHub Flavored Summary)"]
+        STREAMLIT["Streamlit Dashboard<br/>(Historical Trends & Regressions)"]
+    end
+
+    %% Workflow connections
+    TESTSET -->|"Load Benchmark Queries"| RUNNER
+    RUNNER -->|"Dispatch Query Payload"| ADAPTER
+    ADAPTER -->|"POST /query"| TARGET
+    TARGET -->|"Answer & Retrieved Chunks"| ADAPTER
+    ADAPTER -->|"Normalized RAGResponse DTO"| RUNNER
+
+    %% Scoring flows
+    RUNNER -->|"Evaluate Chunks"| RETRIEVAL
+    RUNNER -->|"Verify Groundedness"| FAITHFUL
+    RUNNER -->|"Profile Latency"| LATENCY
+
+    %% Persistence and Gating
+    RETRIEVAL -->|"Aggregated Metrics"| SQL
+    FAITHFUL -->|"Faithfulness Scores"| SQL
+    LATENCY -->|"Latency Stats"| SQL
+    SQL -->|"Historical Delta Evaluation"| GATE
+
+    %% Artifact Generation
+    SQL -->|"Export Findings"| HTML
+    SQL -->|"Generate Artifacts"| MD
+    SQL -->|"Visualize Trends"| STREAMLIT
+
+    classDef input fill:#2563eb,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef target fill:#0d9488,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef harness fill:#4f46e5,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef store fill:#334155,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef report fill:#7c3aed,stroke:#fff,stroke-width:2px,color:#fff;
+
+    class TESTSET input;
+    class TARGET target;
+    class RUNNER,ADAPTER,RETRIEVAL,FAITHFUL,LATENCY harness;
+    class SQL,GATE store;
+    class HTML,MD,STREAMLIT report;
+```
+
+---
+
 ## Target API Contract
 
 RAGPatrol treats any evaluated RAG service as a black box adhering to this standard HTTP interface:
@@ -117,25 +189,25 @@ export DATABASE_URL="sqlite:///eval_runs.db"
 ### 3. CLI Usage
 
 ```bash
-# Stage 1: Classical Set-Based Retrieval Scoring (Precision, Recall, F1)
+# 1. Classical Retrieval Scoring (Precision, Recall, F1)
 python -m harness.runner --stage retrieval
 
-# Stage 2: Dual-Signal Faithfulness Scoring (Dry-run mode, embedding proxy)
+# 2. Dual-Signal Faithfulness Scoring (Dry-run mode, embedding proxy)
 python -m harness.runner --stage faithfulness --dry-run
 
-# Stage 3: Dual-Signal Faithfulness Scoring (Live Gemini LLM Judge)
+# 3. Dual-Signal Faithfulness Scoring (Live Gemini LLM Judge)
 python -m harness.runner --stage faithfulness
 
-# Stage 4: Full Pipeline with Cold vs. Warm Latency Comparison
+# 4. Full Pipeline with Cold vs. Warm Latency Comparison
 python -m harness.runner --stage all --cache-mode both
 
-# Stage 5: Automated Quality Regression Gate (CI/CD check)
+# 5. Automated Quality Regression Gate (CI/CD check)
 python -m harness.regression_check --config default --stage all
 
-# Stage 6: Side-by-Side Configuration Experiment Comparison
+# 6. Side-by-Side Configuration Experiment Comparison
 python -m harness.runner --compare reranker_on reranker_off
 
-# Stage 7: Generate Markdown & HTML Reports
+# 7. Generate Markdown & HTML Reports
 python -m harness.runner --report both
 ```
 
@@ -321,7 +393,7 @@ jobs:
 
 ## Repository Structure
 
-```
+```text
 ragpatrol/
 ├── .github/
 │   └── workflows/

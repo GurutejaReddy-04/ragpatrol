@@ -1,5 +1,5 @@
 """
-Unit tests for side-by-side configuration comparison (Phase 6).
+Unit tests for side-by-side configuration comparison.
 
 Tests winner identification across quality and latency metrics, per-category breakdown,
 tie handling, and graceful unreachable config detection.

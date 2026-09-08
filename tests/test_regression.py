@@ -1,5 +1,5 @@
 """
-Unit tests for regression detection and quality gating (Phase 5).
+Unit tests for regression detection and quality gating.
 
 Uses in-memory SQLite with StaticPool for fast, isolated, deterministic testing.
 """

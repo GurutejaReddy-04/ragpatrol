@@ -1,5 +1,5 @@
 """
-Unit tests for Markdown and HTML report generation (Phase 7).
+Unit tests for Markdown and HTML report generation.
 
 Verifies report structure, embedded tables, styling, and offline handling
 using mock evaluation fixtures with zero live network dependencies.

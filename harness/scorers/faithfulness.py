@@ -1,5 +1,5 @@
 """
-Dual-signal faithfulness evaluation module (Phase 3).
+Dual-signal faithfulness evaluation module.
 
 Combines fast semantic embedding cosine similarity (all-MiniLM-L6-v2) for gross
 topical drift detection with a Gemini LLM-as-a-judge for nuanced factual grounding.

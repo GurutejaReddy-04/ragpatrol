@@ -1,5 +1,5 @@
 """
-Side-by-side configuration comparison and evaluation reporting (Phase 6).
+Side-by-side configuration comparison and evaluation reporting.
 
 Compares two benchmarked configurations across retrieval quality (precision, recall, F1),
 faithfulness groundedness, and latency percentiles (p50, p95, p99), highlighting trade-offs

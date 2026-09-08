@@ -1,5 +1,5 @@
 # ====================================================================
-# Evaluation Test Set for Stub RAG Application (Phase 9 Generality Proof)
+# Evaluation Test Set for Stub RAG Application (Generality Proof)
 #
 # Provenance: Dedicated 5-question test set evaluating the independent
 # stub API on port 8001 with alternative response schemas.

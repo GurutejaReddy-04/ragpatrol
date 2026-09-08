@@ -1,5 +1,5 @@
 """
-Unit tests for the RAG client adapter and stub API normalization (Phase 9 Generality).
+Unit tests for the RAG client adapter and stub API normalization.
 
 Validates schema translation from the stub application's alternative response format
 (answer_text, sources with doc/page/content, response_time_ms) to the canonical RAGResponse DTO.

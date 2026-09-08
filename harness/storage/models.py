@@ -1,5 +1,5 @@
 """
-SQLAlchemy 2.0 relational models for persisting evaluation runs and metrics over time (Phase 5).
+SQLAlchemy 2.0 relational models for persisting evaluation runs and metrics over time.
 """
 
 from datetime import datetime, timezone

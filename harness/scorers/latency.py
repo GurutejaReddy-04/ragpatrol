@@ -1,5 +1,5 @@
 """
-Latency profiling and percentile evaluation module (Phase 4).
+Latency profiling and percentile evaluation module.
 
 Calculates p50 (median), p95, and p99 percentiles alongside min, max, mean,
 and standard deviation to guard against outlier skew. Quantifies cold vs. warm

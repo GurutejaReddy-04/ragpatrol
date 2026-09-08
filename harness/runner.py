@@ -220,13 +220,13 @@ class EvaluationRunner:
                 retrieved_chunk_ids = [c.chunk_id for c in rag_resp.retrieved_chunks]
                 retrieved_texts = [c.text for c in rag_resp.retrieved_chunks]
 
-                # 2. Retrieval Scoring (Phase 2)
+                # 2. Retrieval Scoring
                 ret_res: RetrievalResult = self.retrieval_scorer.score(
                     retrieved_chunk_ids=retrieved_chunk_ids,
                     ground_truth_chunk_ids=gt_chunk_ids,
                 )
 
-                # 3. Faithfulness Scoring (Phase 3)
+                # 3. Faithfulness Scoring
                 if stage in ("faithfulness", "latency", "all"):
                     faith_res: FaithfulnessResult = self.faithfulness_scorer.score(
                         question=q_text,

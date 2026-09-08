@@ -1,5 +1,5 @@
 """
-Unit tests for percentile latency profiling and cache speedup evaluation (Phase 4).
+Unit tests for percentile latency profiling and cache speedup evaluation.
 
 Tests percentile math, standard deviation, and cold/warm cache comparison without network I/O.
 """

@@ -1,5 +1,5 @@
 """
-Markdown evaluation report generator (Phase 7).
+Markdown evaluation report generator.
 
 Renders single-run benchmarks and side-by-side configuration experiments into
 clean, human-readable, GitHub-flavored Markdown artifacts.

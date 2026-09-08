@@ -1,5 +1,5 @@
 """
-Retrieval quality evaluation module (Phase 2).
+Retrieval quality evaluation module.
 
 Calculates pure set-based Precision, Recall, and F1 comparing retrieved chunk IDs
 against curated ground-truth chunk IDs.

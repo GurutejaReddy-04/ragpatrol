@@ -1,5 +1,5 @@
 """
-Database persistence manager for evaluation runs and trend tracking (Phase 5).
+Database persistence manager for evaluation runs and trend tracking.
 
 Supports both SQLite (default) and PostgreSQL (via DATABASE_URL env var).
 Provides atomic multi-entity run persistence and query helpers for regression analysis.

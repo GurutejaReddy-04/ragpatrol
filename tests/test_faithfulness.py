@@ -1,5 +1,5 @@
 """
-Unit tests for dual-signal faithfulness scoring (Phase 3).
+Unit tests for dual-signal faithfulness scoring.
 
 Mocks all LLM judge calls to ensure 100% deterministic, zero-quota execution.
 """
