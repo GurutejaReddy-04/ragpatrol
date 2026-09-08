@@ -18,8 +18,7 @@ if _PROJECT_ROOT not in sys.path:
 try:
     import streamlit as st
 except ImportError:
-    print("Streamlit is not installed. Run: pip install streamlit")
-    sys.exit(1)
+    st = None  # type: ignore[assignment]
 
 from harness.storage.db import DatabaseManager
 from harness.storage.models import EvalRun, RunMetric
@@ -50,6 +49,10 @@ def load_data() -> pd.DataFrame:
 
 def main() -> None:
     """Launch the Streamlit interactive observability dashboard."""
+    if st is None:
+        print("Streamlit is not installed. Run: pip install streamlit")
+        sys.exit(1)
+
     st.set_page_config(page_title="RAGPatrol Dashboard", page_icon="📈", layout="wide")
     st.title("📈 RAGPatrol — LLM Evaluation & Observability Dashboard")
     st.markdown("Automated quality gating, latency profiling, and regression tracking over time.")
