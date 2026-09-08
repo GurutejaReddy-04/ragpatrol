@@ -701,7 +701,7 @@ def main() -> None:
     parser.add_argument(
         "--base-url",
         default=None,
-        help="Override target API base URL (e.g., http://localhost:8001).",
+        help="Override target API base URL (e.g., https://your-api.example.com or http://localhost:8001 for local stub).",
     )
     args = parser.parse_args()
 

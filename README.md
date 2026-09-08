@@ -109,8 +109,8 @@ Create a `.env` file or export your API credentials:
 # Required for live LLM Judge faithfulness scoring (optional in --dry-run mode)
 export JUDGE_API_KEY="your-gemini-api-key"
 
-# Optional overrides
-export TARGET_BASE_URL="http://127.0.0.1:8000"
+# Optional overrides (replace with your RAG service URL)
+export TARGET_BASE_URL="https://your-api.example.com"
 export DATABASE_URL="sqlite:///eval_runs.db"
 ```
 
@@ -147,7 +147,7 @@ Baseline settings are managed via `pydantic-settings` in [`harness/config.py`](h
 
 ```yaml
 target_api:
-  base_url: "http://127.0.0.1:8000"
+  base_url: "https://your-api.example.com"
   timeout_seconds: 30.0
   max_retries: 3
   retry_backoff_factor: 1.5
@@ -242,7 +242,7 @@ A common failure mode in evaluation tooling is tight coupling to a single system
 
 | Dimension | Production System (CiteBase) | Independent Stub (`fake_rag_api`) | Canonical RAGPatrol DTO |
 | :--- | :--- | :--- | :--- |
-| **Port / Endpoint** | `http://127.0.0.1:8000/query` | `http://127.0.0.1:8001/query` | Configurable / `--base-url` |
+| **Endpoint** | `https://your-api.example.com/query` | `http://localhost:8001/query` (local test stub) | Configurable / `--base-url` |
 | **Answer Key** | `"answer"` | `"answer_text"` | `RAGResponse.answer` |
 | **Citations List** | `"sources": [{"source", "page", ...}]` | `"sources": [{"doc", "page", "content"}]` | `RAGResponse.retrieved_chunks` |
 | **Latency Metric** | RAGPatrol wall-clock measurement | `"response_time_ms": float` | `RAGResponse.latency_ms` |
@@ -253,7 +253,7 @@ A common failure mode in evaluation tooling is tight coupling to a single system
 # 1. Start the stub API in the background (port 8001)
 python -m stub_app.fake_rag_api
 
-# 2. Run the full RAGPatrol evaluation against the stub
+# 2. Run the full RAGPatrol evaluation against the stub (replace with your actual API URL if testing remote)
 python -m harness.runner --adapter stub --base-url http://localhost:8001 --stage all
 ```
 

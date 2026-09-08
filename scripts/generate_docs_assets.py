@@ -253,7 +253,7 @@ def generate_swagger_image(fonts):
     width, height = 950, 520
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    draw_window_frame(draw, width, height, "FastAPI Swagger UI - RAGPatrol Mock RAG Service (http://localhost:8001/docs)", fonts)
+    draw_window_frame(draw, width, height, "FastAPI Swagger UI - RAGPatrol Mock RAG Service (/docs)", fonts)
     
     # Swagger Header
     draw.text((28, 56), "RAGPatrol Fake RAG API Stub", font=fonts["sans_xl"], fill=TEXT_WHITE)
@@ -300,7 +300,7 @@ def generate_frontend_image(fonts):
     width, height = 950, 520
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    draw_window_frame(draw, width, height, "Streamlit Dashboard - http://localhost:8501", fonts)
+    draw_window_frame(draw, width, height, "RAGPatrol Observability Dashboard - Streamlit", fonts)
     
     # Header
     draw.text((28, 56), "📈 RAGPatrol — LLM Evaluation & Observability Dashboard", font=fonts["sans_lg"], fill=TEXT_WHITE)

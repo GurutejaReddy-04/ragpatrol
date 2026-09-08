@@ -48,7 +48,7 @@ class RAGClient:
         """
         Initialize the RAG client adapter.
 
-        :param base_url: Target API root URL (e.g., http://127.0.0.1:8000).
+        :param base_url: Target API root URL (e.g., https://your-api.example.com).
         :param api_key: Optional API key sent via X-API-Key header.
         :param timeout_seconds: Network read/write timeout in seconds.
         :param max_retries: Maximum attempts for transient network retries.

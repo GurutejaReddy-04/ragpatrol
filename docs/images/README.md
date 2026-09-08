@@ -57,7 +57,7 @@ python -m harness.runner --report html
 # In terminal 1:
 python -m stub_app.fake_rag_api
 
-# In terminal 2:
+# In terminal 2 (replace with your actual API URL if testing against a remote service):
 python -m harness.runner --adapter stub --base-url http://localhost:8001 --stage all
 ```
 *Capture the evaluation summary output showing 100% precision, 100% recall, 0% hallucinations, and 15ms latency.*

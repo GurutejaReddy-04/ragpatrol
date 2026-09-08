@@ -2,7 +2,7 @@
 # Secrets (e.g. CITEBASE_API_KEY, JUDGE_API_KEY) are strictly loaded from environment variables.
 
 target_api:
-  base_url: "http://127.0.0.1:8000"
+  base_url: "https://your-api.example.com"
   timeout_seconds: 30.0
   max_retries: 3
   retry_backoff_factor: 1.5
@@ -33,12 +33,12 @@ judge:
 
 configs:
   reranker_on:
-    base_url: "http://127.0.0.1:8000"
+    base_url: "https://your-api.example.com"
     env_overrides:
       ENABLE_RERANKER: "true"
       WEB_SEARCH_FALLBACK_THRESHOLD: "0.35"
   reranker_off:
-    base_url: "http://127.0.0.1:8000"
+    base_url: "https://your-api.example.com"
     env_overrides:
       ENABLE_RERANKER: "false"
       WEB_SEARCH_FALLBACK_THRESHOLD: "0.35"
