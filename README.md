@@ -78,6 +78,8 @@ RAGPatrol treats any evaluated RAG service as a black box adhering to this stand
   }
   ```
 
+![Canonical Query & Response DTO](docs/images/query-response.png)
+
 ---
 
 ## Quick Start
@@ -220,6 +222,16 @@ The HTML report contains embedded CSS (zero external CDN dependencies), interact
 python -m harness.runner --report html
 ```
 
+### Streamlit Trend & KPI Dashboard
+RAGPatrol also includes an interactive Streamlit dashboard ([`harness/reporting/dashboard.py`](harness/reporting/dashboard.py)) for inspecting historical runs, metric trends, and flagged hallucinations:
+
+![Streamlit Dashboard Preview](docs/images/frontend-ui.png)
+
+```bash
+# Launch interactive evaluation dashboard
+streamlit run harness/reporting/dashboard.py
+```
+
 ---
 
 ## Proving Generality
@@ -246,6 +258,11 @@ python -m harness.runner --adapter stub --base-url http://localhost:8001 --stage
 ```
 
 ![Stub App Execution](docs/images/stub-app-run.png)
+
+### OpenAPI Contract Preview
+The stub service serves an interactive OpenAPI / Swagger UI on port 8001:
+
+![Stub OpenAPI Specification](docs/images/swagger-ui.png)
 
 > [!NOTE]
 > **Generality Validation Guarantee:**
@@ -315,6 +332,9 @@ ragpatrol/
 │       ├── comparison-table.png
 │       ├── report-html.png
 │       ├── stub-app-run.png
+│       ├── swagger-ui.png
+│       ├── frontend-ui.png
+│       ├── query-response.png
 │       └── README.md
 ├── harness/
 │   ├── clients/

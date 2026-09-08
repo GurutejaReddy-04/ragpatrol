@@ -10,12 +10,15 @@ This directory contains visual documentation artifacts and screenshot previews d
 | `comparison-table.png` | Side-by-side configuration experiment comparison card | < 1 MB |
 | `report-html.png` | Standalone HTML evaluation report KPI and category card | < 1 MB |
 | `stub-app-run.png` | CLI output demonstrating generality against independent stub API | < 1 MB |
+| `swagger-ui.png` | Interactive OpenAPI / Swagger UI contract preview for target/stub services | < 1 MB |
+| `frontend-ui.png` | Interactive Streamlit analytics and historical run KPI dashboard | < 1 MB |
+| `query-response.png` | Canonical RAG query and retrieved chunk response payload schema | < 1 MB |
 
 ---
 
 ## Programmatic Regeneration
 
-All four documentation images can be programmatically regenerated at any time using PIL:
+All seven documentation images can be programmatically regenerated at any time using PIL:
 
 ```bash
 # Ensure PIL (Pillow) is installed in your active virtual environment

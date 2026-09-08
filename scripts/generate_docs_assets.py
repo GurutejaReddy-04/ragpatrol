@@ -5,6 +5,9 @@ Produces clean, high-DPI dark-mode terminal and UI cards for:
 - comparison-table.png (side-by-side comparison)
 - report-html.png (HTML evaluation report preview)
 - stub-app-run.png (harness running against stub app)
+- swagger-ui.png (FastAPI Swagger UI for stub app)
+- frontend-ui.png (Streamlit observability dashboard)
+- query-response.png (canonical RAGResponse JSON payload)
 """
 
 import os
@@ -17,12 +20,14 @@ DOCS_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 # Colors
 BG_DARK = (15, 23, 42)          # slate-900
 PANEL_DARK = (30, 41, 59)       # slate-800
+PANEL_ALT = (24, 33, 47)
 BORDER_COLOR = (51, 65, 85)     # slate-700
 TEXT_WHITE = (248, 250, 252)    # slate-50
 TEXT_MUTED = (148, 163, 184)    # slate-400
 TEXT_GREEN = (52, 211, 153)     # emerald-400
 TEXT_CYAN = (56, 189, 248)      # sky-400
 TEXT_YELLOW = (251, 191, 36)    # amber-400
+TEXT_PURPLE = (192, 132, 252)   # purple-400
 RED_DOT = (239, 68, 68)
 YELLOW_DOT = (245, 158, 11)
 GREEN_DOT = (16, 185, 129)
@@ -57,8 +62,9 @@ def draw_window_frame(draw, width, height, title, fonts):
     draw.ellipse([(16, 15), (28, 27)], fill=RED_DOT)
     draw.ellipse([(36, 15), (48, 27)], fill=YELLOW_DOT)
     draw.ellipse([(56, 15), (68, 27)], fill=GREEN_DOT)
-    draw.text((width // 2 - 140, 12), title, font=fonts["mono_sm"], fill=TEXT_MUTED)
+    draw.text((width // 2 - 160, 12), title, font=fonts["mono_sm"], fill=TEXT_MUTED)
 
+# 1. Terminal Image
 def generate_terminal_image(fonts):
     width, height = 950, 520
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
@@ -88,7 +94,7 @@ def generate_terminal_image(fonts):
         ("tests/test_storage.py::test_save_run_with_dict_data PASSED                         [ 97%]", TEXT_GREEN),
         ("tests/test_testset.py::test_validate_testset_detailed PASSED                       [100%]", TEXT_GREEN),
         ("", TEXT_WHITE),
-        ("======================= 86 passed in 14.35s ========================", TEXT_GREEN),
+        ("======================= 86 passed in 13.74s ========================", TEXT_GREEN),
     ]
     
     y = 56
@@ -100,6 +106,7 @@ def generate_terminal_image(fonts):
     img.save(out_path, "PNG", optimize=True)
     print(f"Generated {out_path} ({os.path.getsize(out_path)} bytes)")
 
+# 2. Comparison Table Image
 def generate_comparison_image(fonts):
     width, height = 950, 520
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
@@ -130,7 +137,7 @@ def generate_comparison_image(fonts):
     y = 210
     for idx, (m, v1, v2, delta, win, win_col) in enumerate(rows):
         if idx % 2 == 1:
-            draw.rounded_rectangle([(28, y - 5), (width - 28, y + 28)], radius=4, fill=(24, 33, 47))
+            draw.rounded_rectangle([(28, y - 5), (width - 28, y + 28)], radius=4, fill=PANEL_ALT)
         draw.text((40, y), m, font=fonts["sans_sm"], fill=TEXT_WHITE)
         draw.text((280, y), v1, font=fonts["mono_sm"], fill=TEXT_WHITE)
         draw.text((450, y), v2, font=fonts["mono_sm"], fill=TEXT_WHITE)
@@ -142,6 +149,7 @@ def generate_comparison_image(fonts):
     img.save(out_path, "PNG", optimize=True)
     print(f"Generated {out_path} ({os.path.getsize(out_path)} bytes)")
 
+# 3. HTML Report Preview Card
 def generate_report_html_image(fonts):
     width, height = 950, 520
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
@@ -197,6 +205,7 @@ def generate_report_html_image(fonts):
     img.save(out_path, "PNG", optimize=True)
     print(f"Generated {out_path} ({os.path.getsize(out_path)} bytes)")
 
+# 4. Stub App Run Image
 def generate_stub_app_image(fonts):
     width, height = 950, 520
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
@@ -239,13 +248,160 @@ def generate_stub_app_image(fonts):
     img.save(out_path, "PNG", optimize=True)
     print(f"Generated {out_path} ({os.path.getsize(out_path)} bytes)")
 
+# 5. Swagger UI Image
+def generate_swagger_image(fonts):
+    width, height = 950, 520
+    img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw_window_frame(draw, width, height, "FastAPI Swagger UI - RAGPatrol Mock RAG Service (http://localhost:8001/docs)", fonts)
+    
+    # Swagger Header
+    draw.text((28, 56), "RAGPatrol Fake RAG API Stub", font=fonts["sans_xl"], fill=TEXT_WHITE)
+    draw.rounded_rectangle([(370, 60), (430, 85)], radius=4, fill=(59, 130, 246))
+    draw.text((380, 64), "1.0.0", font=fonts["mono_sm"], fill=TEXT_WHITE)
+    draw.text((28, 92), "Independent mock RAG API with alternative schema for RAGPatrol generality verification.", font=fonts["sans_sm"], fill=TEXT_MUTED)
+    
+    # Endpoints
+    # GET /health
+    draw.rounded_rectangle([(28, 130), (width - 28, 185)], radius=6, fill=PANEL_DARK, outline=(16, 185, 129), width=1)
+    draw.rounded_rectangle([(36, 138), (100, 177)], radius=4, fill=(16, 185, 129))
+    draw.text((50, 146), "GET", font=fonts["sans_md"], fill=TEXT_WHITE)
+    draw.text((120, 146), "/health", font=fonts["mono_md"], fill=TEXT_WHITE)
+    draw.text((240, 147), "Liveness probe returning HTTP 200 OK", font=fonts["sans_sm"], fill=TEXT_MUTED)
+    
+    # POST /query
+    draw.rounded_rectangle([(28, 205), (width - 28, 260)], radius=6, fill=PANEL_DARK, outline=(59, 130, 246), width=1)
+    draw.rounded_rectangle([(36, 213), (100, 252)], radius=4, fill=(59, 130, 246))
+    draw.text((45, 221), "POST", font=fonts["sans_md"], fill=TEXT_WHITE)
+    draw.text((120, 221), "/query", font=fonts["mono_md"], fill=TEXT_WHITE)
+    draw.text((240, 222), "Deterministic retrieval against in-memory knowledge store", font=fonts["sans_sm"], fill=TEXT_MUTED)
+    
+    # Schemas section
+    draw.rounded_rectangle([(28, 285), (width - 28, 485)], radius=8, fill=PANEL_DARK, outline=BORDER_COLOR)
+    draw.text((44, 298), "Schemas (Deliberate Disparate Format)", font=fonts["sans_md"], fill=TEXT_WHITE)
+    
+    schemas = [
+        ("> StubQueryRequest", "{ question: string, collection_name?: string, filters?: object }"),
+        ("> StubQueryResponse", "{ answer_text: string, sources: StubSourceItem[], response_time_ms: float }"),
+        ("> StubSourceItem", "{ doc: string, page: int, content: string }"),
+    ]
+    sy = 335
+    for s_name, s_fields in schemas:
+        draw.text((44, sy), s_name, font=fonts["sans_sm"], fill=TEXT_CYAN)
+        draw.text((240, sy), s_fields, font=fonts["mono_sm"], fill=TEXT_MUTED)
+        sy += 42
+        
+    out_path = DOCS_IMAGES_DIR / "swagger-ui.png"
+    img.save(out_path, "PNG", optimize=True)
+    print(f"Generated {out_path} ({os.path.getsize(out_path)} bytes)")
+
+# 6. Frontend UI Image (Streamlit Dashboard)
+def generate_frontend_image(fonts):
+    width, height = 950, 520
+    img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw_window_frame(draw, width, height, "Streamlit Dashboard - http://localhost:8501", fonts)
+    
+    # Header
+    draw.text((28, 56), "📈 RAGPatrol — LLM Evaluation & Observability Dashboard", font=fonts["sans_lg"], fill=TEXT_WHITE)
+    draw.text((28, 88), "Automated quality gating, latency profiling, and regression tracking over time.", font=fonts["sans_sm"], fill=TEXT_MUTED)
+    
+    # Metric KPI row
+    kpis = [("LATEST PRECISION", "85.0%"), ("LATEST RECALL", "80.0%"), ("LATEST F1", "82.4%"), ("FAITHFULNESS", "88.0%")]
+    card_w = 205
+    for i, (k_title, k_val) in enumerate(kpis):
+        cx = 28 + i * (card_w + 24)
+        draw.rounded_rectangle([(cx, 120), (cx + card_w, 195)], radius=8, fill=PANEL_DARK, outline=BORDER_COLOR)
+        draw.text((cx + 14, 132), k_title, font=fonts["sans_sm"], fill=TEXT_MUTED)
+        draw.text((cx + 14, 155), k_val, font=fonts["sans_xl"], fill=TEXT_GREEN)
+        
+    # Historical Trend Chart Mockup
+    draw.rounded_rectangle([(28, 215), (width - 28, 355)], radius=8, fill=PANEL_DARK, outline=BORDER_COLOR)
+    draw.text((44, 226), "Quality Metrics Trend Across Runs (Precision, Recall, F1)", font=fonts["sans_md"], fill=TEXT_WHITE)
+    
+    # Draw simple mock trend lines
+    pts_prec = [(80, 310), (220, 290), (360, 275), (500, 270), (640, 260), (780, 255), (880, 250)]
+    pts_rec =  [(80, 325), (220, 305), (360, 295), (500, 290), (640, 280), (780, 275), (880, 270)]
+    draw.line(pts_prec, fill=TEXT_GREEN, width=3)
+    draw.line(pts_rec, fill=TEXT_CYAN, width=3)
+    for p in pts_prec:
+        draw.ellipse([(p[0] - 4, p[1] - 4), (p[0] + 4, p[1] + 4)], fill=TEXT_GREEN)
+    for p in pts_rec:
+        draw.ellipse([(p[0] - 4, p[1] - 4), (p[0] + 4, p[1] + 4)], fill=TEXT_CYAN)
+        
+    draw.text((700, 325), "━ Precision   ━ Recall", font=fonts["mono_sm"], fill=TEXT_MUTED)
+    
+    # Run history table
+    draw.rounded_rectangle([(28, 375), (width - 28, 485)], radius=8, fill=PANEL_DARK, outline=BORDER_COLOR)
+    draw.text((44, 386), "Evaluation Run History (SQLite / PostgreSQL)", font=fonts["sans_md"], fill=TEXT_WHITE)
+    
+    t_headers = [("Run ID", 44), ("Timestamp", 220), ("Config", 440), ("Stage", 580), ("Queries", 700), ("Status", 820)]
+    for th, tx in t_headers:
+        draw.text((tx, 415), th, font=fonts["sans_sm"], fill=TEXT_MUTED)
+    t_rows = [
+        ("run_9f21b", "2026-09-08 13:57:47", "default", "all", "25", "PASSED"),
+        ("run_7c12a", "2026-09-08 12:30:15", "reranker_on", "all", "25", "PASSED"),
+    ]
+    ty = 442
+    for rid, ts, cfg, stg, qcnt, st in t_rows:
+        draw.text((44, ty), rid, font=fonts["mono_sm"], fill=TEXT_WHITE)
+        draw.text((220, ty), ts, font=fonts["mono_sm"], fill=TEXT_MUTED)
+        draw.text((440, ty), cfg, font=fonts["mono_sm"], fill=TEXT_WHITE)
+        draw.text((580, ty), stg, font=fonts["mono_sm"], fill=TEXT_WHITE)
+        draw.text((700, ty), qcnt, font=fonts["mono_sm"], fill=TEXT_MUTED)
+        draw.text((820, ty), st, font=fonts["sans_sm"], fill=TEXT_GREEN)
+        ty += 24
+        
+    out_path = DOCS_IMAGES_DIR / "frontend-ui.png"
+    img.save(out_path, "PNG", optimize=True)
+    print(f"Generated {out_path} ({os.path.getsize(out_path)} bytes)")
+
+# 7. Query Response JSON Image
+def generate_query_response_image(fonts):
+    width, height = 950, 520
+    img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw_window_frame(draw, width, height, "Canonical RAGResponse DTO - JSON Payload", fonts)
+    
+    draw.text((28, 56), "Target API Contract — Normalized Canonical Response", font=fonts["sans_lg"], fill=TEXT_WHITE)
+    draw.text((28, 88), "Normalized by RAGPatrol Client Adapter (Pydantic v2 RAGResponse)", font=fonts["sans_sm"], fill=TEXT_MUTED)
+    
+    json_lines = [
+        ("{", TEXT_WHITE),
+        ('  "answer": "Failed embedding calls are retried 3 times with exponential backoff.",', TEXT_CYAN),
+        ('  "retrieved_chunks": [', TEXT_WHITE),
+        ('    {', TEXT_WHITE),
+        ('      "chunk_id": "doc12_chunk3",', TEXT_GREEN),
+        ('      "text": "Failed embedding calls are retried 3 times with exponential backoff.",', TEXT_MUTED),
+        ('      "source_doc": "architecture_overview.pdf",', TEXT_MUTED),
+        ('      "score": 0.94,', TEXT_YELLOW),
+        ('      "metadata": { "page": 2 }', TEXT_PURPLE),
+        ('    }', TEXT_WHITE),
+        ('  ],', TEXT_WHITE),
+        ('  "latency_ms": 142.5', TEXT_YELLOW),
+        ("}", TEXT_WHITE),
+    ]
+    
+    draw.rounded_rectangle([(28, 120), (width - 28, 485)], radius=8, fill=PANEL_DARK, outline=BORDER_COLOR)
+    jy = 140
+    for line, color in json_lines:
+        draw.text((50, jy), line, font=fonts["mono_md"], fill=color)
+        jy += 25
+        
+    out_path = DOCS_IMAGES_DIR / "query-response.png"
+    img.save(out_path, "PNG", optimize=True)
+    print(f"Generated {out_path} ({os.path.getsize(out_path)} bytes)")
+
 def main():
     fonts = get_fonts()
     generate_terminal_image(fonts)
     generate_comparison_image(fonts)
     generate_report_html_image(fonts)
     generate_stub_app_image(fonts)
-    print("All docs images successfully generated.")
+    generate_swagger_image(fonts)
+    generate_frontend_image(fonts)
+    generate_query_response_image(fonts)
+    print("All 7 docs images successfully generated.")
 
 if __name__ == "__main__":
     main()
