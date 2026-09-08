@@ -1,14 +1,15 @@
-name: LLM Evaluation & Regression Gate
+name: RAGPatrol CI & Regression Gate
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, master, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
   evaluate:
+    name: Regression Gating & Quality Audit
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -25,13 +26,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Import & Smoke Tests
+      - name: Validate Ground-Truth Dataset Schema
         run: |
-          python -m pytest tests/test_imports.py -v --tb=short
+          python testset/validate_testset.py
 
-      - name: Execute Evaluation Runner (Phase 0 Skeleton)
-        env:
-          CITEBASE_API_KEY: ${{ secrets.CITEBASE_API_KEY }}
-          JUDGE_API_KEY: ${{ secrets.JUDGE_API_KEY }}
+      - name: Run Full Test Suite (86 Unit & Integration Tests)
         run: |
-          python -m pytest tests/test_connectivity.py -v --tb=short
+          python -m pytest tests/ -v --tb=short
+
+      - name: Execute End-to-End Dry-Run & Generality Gate
+        run: |
+          # Start independent stub RAG API in background
+          python -m uvicorn stub_app.fake_rag_api:app --host 127.0.0.1 --port 8001 &
+          sleep 2
+          # Execute RAGPatrol against stub API
+          python -m harness.runner --adapter stub --base-url http://127.0.0.1:8001 --stage all --cache-mode both --dry-run

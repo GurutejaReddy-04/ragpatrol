@@ -2,8 +2,8 @@
 # Curated Evaluation Test Set (Questions v1.0)
 #
 # Provenance: Derived from CiteBase benchmark dataset
-# Source: D:\Btech_Organized\Projects\Production RAG-as-a-Service — multi-tenant document intelligence API\tests\eval\benchmark_dataset.json
-# Reference: CiteBase EVALUATION_REPORT.md (25 held-out evaluation queries)
+# Source: CiteBase benchmark_dataset.json (25 held-out evaluation queries)
+# Reference: CiteBase EVALUATION_REPORT.md
 #
 # Categories:
 #   - easy: single-page factual retrieval

@@ -1,8 +1,27 @@
 # RAGPatrol — LLM Evaluation & Observability Harness
 
-> **Automated Quality Gating, Faithfulness Auditing, and Latency Profiling for Production RAG Systems**
+<blockquote>Automated Quality Gating, Faithfulness Auditing, and Latency Profiling for Production RAG Systems</blockquote>
 
-**RAGPatrol** (GitHub: `ragpatrol`) is a surgical regression gating and observability harness that evaluates black-box RAG systems (including [CiteBase](file:///D:/Btech_Organized/Projects/Production%20RAG-as-a-Service%20%E2%80%94%20multi-tenant%20document%20intelligence%20API) and independent architectures) across retrieval precision/recall/F1, answer faithfulness, and latency percentiles. It persists benchmark runs over time in SQLite/PostgreSQL, supports side-by-side configuration comparisons, and gates CI/CD pipelines against quality and performance regressions.
+<p align="left">
+  <img src="https://img.shields.io/badge/Python-3.10%20%7C%203.11-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/Tests-86%20Passed-10B981?logo=pytest&logoColor=white" alt="Pytest 86 Passed">
+  <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License">
+  <img src="https://img.shields.io/badge/CI%2FCD-Passing-brightgreen?logo=github-actions&logoColor=white" alt="CI/CD Status">
+</p>
+
+**RAGPatrol** is a surgical regression gating and observability harness designed to evaluate black-box Retrieval-Augmented Generation (RAG) systems across retrieval precision/recall/F1, answer faithfulness, and latency percentiles. It persists benchmark runs over time in SQLite or PostgreSQL, supports side-by-side configuration comparisons, and gates CI/CD pipelines against quality degradations.
+
+---
+
+## Key Features
+
+- **Vendor-Agnostic Black-Box Evaluation:** Queries any RAG service adhering to a lightweight HTTP contract (`GET /health`, `POST /query`).
+- **Dual-Signal Faithfulness Auditing:** Combines local semantic embedding similarity (`sentence-transformers/all-MiniLM-L6-v2`) with LLM-as-a-judge verification (Google Gemini) to detect hallucinations without open-world conflation.
+- **Latency Percentile Profiling:** Profiles p50, p95, and p99 response times with cold-cache vs. warm-cache comparison and speedup factor computation.
+- **Automated Regression Gating:** Evaluates run deltas against statistical thresholds and exits with non-zero status codes to block CI/CD regressions.
+- **Side-by-Side Configuration Experiments:** Compares two system configurations (e.g., reranker enabled vs. disabled) across quality metrics and per-category breakdowns.
+- **Multi-Format Reporting:** Exports zero-dependency standalone HTML reports with interactive CSS row-highlighting and print-to-PDF styles, plus GitHub-flavored Markdown artifacts.
+- **Generality Proof:** Ships with an independent stub application (`stub_app/fake_rag_api.py`) implementing an alternative schema to prove reusability across disparate architectures.
 
 ---
 
@@ -52,74 +71,248 @@ RAGPatrol treats any evaluated RAG service as a black box adhering to this stand
 
 ---
 
-## Black-Box Client Adapter & CiteBase Normalization
+## Quick Start
 
-Different RAG systems return disparate citation schemas. CiteBase, for instance, returns citations in a `sources` array with page numbers, document titles, rerank scores, and retrieval channels.
+### 1. Installation
 
-The RAGPatrol client adapter immediately normalizes incoming vendor payloads into canonical `RetrievedChunk` and `RAGResponse` DTOs:
+Clone the repository and install dependencies in a Python 3.10+ virtual environment:
 
-```
-+-------------------------------------------------------------+
-| CiteBase API Response                                       |
-| { "answer": "...", "sources": [ { "chunk_id": "...", ... }]} |
-+------------------------------+------------------------------+
-                               |
-                               v
-+-------------------------------------------------------------+
-| harness.clients.rag_client (Client Adapter)                 |
-| normalize_target_response()                                 |
-+------------------------------+------------------------------+
-                               |
-                               v
-+-------------------------------------------------------------+
-| Canonical DTOs (Pydantic v2)                                |
-| RAGResponse(answer=..., retrieved_chunks=[RetrievedChunk])  |
-+-------------------------------------------------------------+
+```bash
+git clone https://github.com/GurutejaReddy-04/ragpatrol.git
+cd ragpatrol
+
+python -m venv .venv
+# On Linux/macOS:
+source .venv/bin/activate
+# On Windows:
+.venv\Scripts\Activate.ps1
+
+pip install -r requirements.txt
 ```
 
+### 2. Environment Variables
+
+Create a `.env` file or export your API credentials:
+
+```bash
+# Required for live LLM Judge faithfulness scoring (optional in --dry-run mode)
+export JUDGE_API_KEY="your-gemini-api-key"
+
+# Optional overrides
+export TARGET_BASE_URL="http://127.0.0.1:8000"
+export DATABASE_URL="sqlite:///eval_runs.db"
+```
+
+### 3. CLI Usage
+
+```bash
+# Stage 1: Classical Set-Based Retrieval Scoring (Precision, Recall, F1)
+python -m harness.runner --stage retrieval
+
+# Stage 2: Dual-Signal Faithfulness Scoring (Dry-run mode, embedding proxy)
+python -m harness.runner --stage faithfulness --dry-run
+
+# Stage 3: Dual-Signal Faithfulness Scoring (Live Gemini LLM Judge)
+python -m harness.runner --stage faithfulness
+
+# Stage 4: Full Pipeline with Cold vs. Warm Latency Comparison
+python -m harness.runner --stage all --cache-mode both
+
+# Stage 5: Automated Quality Regression Gate (CI/CD check)
+python -m harness.regression_check --config default --stage all
+
+# Stage 6: Side-by-Side Configuration Experiment Comparison
+python -m harness.runner --compare reranker_on reranker_off
+
+# Stage 7: Generate Markdown & HTML Reports
+python -m harness.runner --report both
+```
+
 ---
 
-## Configuration & Secret Isolation
+## Configuration
 
-Configuration is managed via `pydantic-settings` (`harness/config.py`).
-- Baseline thresholds and settings are loaded from [`config.yaml`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/config.yaml).
-- Secrets and credentials are **strictly injected via environment variables** and are never written to disk:
-  - `CITEBASE_API_KEY`: Authentication key for the target RAG service.
-  - `JUDGE_API_KEY`: API key for the LLM-as-a-judge model (or `GEMINI_API_KEY`).
-  - `TARGET_BASE_URL`: Base URL override (defaults to `http://127.0.0.1:8000`).
+Baseline settings are managed via `pydantic-settings` in [`harness/config.py`](harness/config.py) and loaded from [`config.yaml`](config.yaml). Secrets are strictly injected via environment variables:
+
+```yaml
+target_api:
+  base_url: "http://127.0.0.1:8000"
+  timeout_seconds: 30.0
+  max_retries: 3
+  retry_backoff_factor: 1.5
+
+testset:
+  path: "testset/questions.yaml"
+
+storage:
+  database_url: "sqlite:///eval_runs.db"
+
+metrics:
+  retrieval:
+    min_precision: 0.70
+    min_recall: 0.70
+    min_f1: 0.70
+  faithfulness:
+    min_score: 0.75
+    embedding_weight: 0.4
+    llm_judge_weight: 0.6
+  latency:
+    max_p95_ms: 2500.0
+    max_p99_ms: 5000.0
+
+judge:
+  provider: "gemini"
+  model: "gemini-2.5-flash"
+  temperature: 0.0
+```
 
 ---
 
----
+## Regression Detection
 
-## Test Set Provenance & Ground Truth Schema
+RAGPatrol's regression detection module ([`harness/regression_check.py`](harness/regression_check.py)) queries historical run records stored in SQLite/PostgreSQL to detect meaningful quality or latency degradation:
 
-RAGPatrol uses a curated, version-controlled ground-truth test set located at [`testset/questions.yaml`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/testset/questions.yaml).
+```bash
+python -m harness.regression_check --config default --stage all
+```
 
-### Provenance
-- **Source Corpus:** Derived from CiteBase's held-out 25-question benchmark dataset ([`benchmark_dataset.json`](file:///D:/Btech_Organized/Projects/Production%20RAG-as-a-Service%20%E2%80%94%20multi-tenant%20document%20intelligence%20API/tests/eval/benchmark_dataset.json)).
-- **Historical Context:** See CiteBase's original [`EVALUATION_REPORT.md`](file:///D:/Btech_Organized/Projects/Production%20RAG-as-a-Service%20%E2%80%94%20multi-tenant%20document%20intelligence%20API/EVALUATION_REPORT.md) for baseline hit rates and latency comparisons across the 205-page corpus.
-- **Mapping Script:** Generated using [`scripts/extract_citebase_testset.py`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/scripts/extract_citebase_testset.py).
-- **Invariants Checked by [`testset/validate_testset.py`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/testset/validate_testset.py):**
-  - No duplicate IDs.
-  - Every `ground_truth_chunk_ids` list is non-empty (`f"doc_{doc_id}_chunk_{page}"` or `f"doc_{doc_id}_chunk_ood"`).
-  - Categorization taxonomy: `easy` (single page), `ambiguous` (multi-page/cross-collection), and `edge` (out-of-domain web fallback).
+- **Retrieval Thresholds:** Fails if Precision, Recall, or F1 drops by > 5% (0.05).
+- **Faithfulness Threshold:** Fails if groundedness score drops by > 10% (0.10).
+- **Latency Threshold:** Fails if p95 response time increases by > 20% relative to baseline.
+- **CI Exit Code:** Exits with code `0` on pass, or code `1` with formatted delta diagnostics on regression.
 
 ---
 
-## Directory Structure
+## Comparison Mode
+
+RAGPatrol enables side-by-side benchmarking of two distinct system configurations (e.g., evaluating the impact of cross-encoder reranking or vector quantization):
+
+```bash
+python -m harness.runner --compare reranker_on reranker_off
+```
+
+![Configuration Comparison Preview](docs/images/comparison-table.png)
+
+The comparator highlights metric winners across quality and speed dimensions, computes percentage deltas, and isolates trade-offs across question categories (`easy`, `ambiguous`, `edge`).
+
+---
+
+## Reporting
+
+RAGPatrol automatically generates self-contained reports in both GitHub-flavored Markdown and HTML formats.
+
+### HTML Report Preview
+The HTML report contains embedded CSS (zero external CDN dependencies), interactive hover highlighting, KPI scorecards, category drill-downs, and print-to-PDF stylesheets:
+
+![HTML Report Preview](docs/images/report-html.png)
+
+```bash
+# Open generated HTML report in your default browser
+python -m harness.runner --report html
+```
+
+---
+
+## Proving Generality
+
+A common failure mode in evaluation tooling is tight coupling to a single system's internal API contract. To prove that RAGPatrol is **truly vendor-agnostic**, the project includes an independent stub application ([`stub_app/fake_rag_api.py`](stub_app/fake_rag_api.py)) exposing a deliberately different schema, paired with a dedicated 5-question test set ([`testset/stub_questions.yaml`](testset/stub_questions.yaml)).
+
+### Disparate Schema Comparison
+
+| Dimension | Production System (CiteBase) | Independent Stub (`fake_rag_api`) | Canonical RAGPatrol DTO |
+| :--- | :--- | :--- | :--- |
+| **Port / Endpoint** | `http://127.0.0.1:8000/query` | `http://127.0.0.1:8001/query` | Configurable / `--base-url` |
+| **Answer Key** | `"answer"` | `"answer_text"` | `RAGResponse.answer` |
+| **Citations List** | `"sources": [{"source", "page", ...}]` | `"sources": [{"doc", "page", "content"}]` | `RAGResponse.retrieved_chunks` |
+| **Latency Metric** | RAGPatrol wall-clock measurement | `"response_time_ms": float` | `RAGResponse.latency_ms` |
+
+### Running Against the Stub
+
+```bash
+# 1. Start the stub API in the background (port 8001)
+python -m stub_app.fake_rag_api
+
+# 2. Run the full RAGPatrol evaluation against the stub
+python -m harness.runner --adapter stub --base-url http://localhost:8001 --stage all
+```
+
+![Stub App Execution](docs/images/stub-app-run.png)
+
+> [!NOTE]
+> **Generality Validation Guarantee:**
+> "RAGPatrol was validated against two independent systems: CiteBase and the stub app, proving it is a general-purpose evaluation tool."
+
+---
+
+## Testing
+
+RAGPatrol includes an extensive automated test suite covering unit logic, resilience, network retries, Pydantic DTO normalization, and edge cases with zero external service dependencies:
+
+```bash
+# 1. Validate ground-truth dataset integrity and schema invariants
+python testset/validate_testset.py
+
+# 2. Run the complete pytest test suite (86 tests)
+pytest tests/ -v
+```
+
+![Pytest Test Suite Passing](docs/images/terminal.png)
+
+---
+
+## CI/CD Integration
+
+RAGPatrol is configured to gate pull requests and pushes via GitHub Actions ([`.github/workflows/eval.yml`](.github/workflows/eval.yml)):
+
+```yaml
+name: RAGPatrol CI & Regression Gate
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python testset/validate_testset.py
+      - run: python -m pytest tests/ -v
+      - name: Generality & Dry-Run Verification
+        run: |
+          python -m uvicorn stub_app.fake_rag_api:app --host 127.0.0.1 --port 8001 &
+          sleep 2
+          python -m harness.runner --adapter stub --base-url http://127.0.0.1:8001 --stage all --dry-run
+```
+
+---
+
+## Repository Structure
 
 ```
-ragpatrol/ (LLM-Evaluation-Observability-Harness/)
+ragpatrol/
 ├── .github/
 │   └── workflows/
-│       └── eval.yml               # CI regression gating workflow
+│       └── eval.yml               # Automated CI regression gate
+├── docs/
+│   └── images/                    # Documentation screenshots & previews
+│       ├── terminal.png
+│       ├── comparison-table.png
+│       ├── report-html.png
+│       ├── stub-app-run.png
+│       └── README.md
 ├── harness/
 │   ├── clients/
-│   │   ├── contracts.py           # Pydantic v2 DTOs and citation adapters
+│   │   ├── contracts.py           # Pydantic v2 canonical DTOs & citation adapters
 │   │   └── rag_client.py          # Tenacity-backed HTTP client adapter
-│   ├── config.py                  # Pydantic-settings config loader
-│   ├── exceptions.py              # Custom domain-specific exceptions
+│   ├── config.py                  # Pydantic-settings configuration loader
+│   ├── exceptions.py              # Domain-specific exceptions
 │   ├── regression_check.py        # Automated quality regression detector & CI gate
 │   ├── reporting/
 │   │   ├── comparison_report.py   # Side-by-side configuration experiment reporter
@@ -135,7 +328,8 @@ ragpatrol/ (LLM-Evaluation-Observability-Harness/)
 │       ├── db.py                  # Database session manager
 │       └── models.py              # SQLAlchemy 2.0 ORM schemas
 ├── scripts/
-│   └── extract_citebase_testset.py # Extracts and maps CiteBase eval benchmark
+│   ├── extract_citebase_testset.py # Extracts and maps CiteBase eval benchmark
+│   └── generate_docs_assets.py     # Generates documentation screenshots
 ├── stub_app/
 │   ├── __init__.py                # Stub app package
 │   └── fake_rag_api.py            # Standalone FastAPI mock RAG service (port 8001)
@@ -159,6 +353,7 @@ ragpatrol/ (LLM-Evaluation-Observability-Harness/)
 │   ├── test_storage.py            # Database manager & persistence tests
 │   └── test_testset.py            # Automated test set schema enforcement
 ├── config.yaml                    # Public configuration parameters
+├── LICENSE                        # MIT License
 ├── pyproject.toml                 # Ruff, mypy, and build metadata (ragpatrol)
 ├── pytest.ini                     # Pytest defaults (-v --tb=short)
 ├── requirements.txt               # Pinned dependencies
@@ -167,97 +362,6 @@ ragpatrol/ (LLM-Evaluation-Observability-Harness/)
 
 ---
 
-## Running Test Suite
+## License
 
-Activate the Python environment and run:
-
-```bash
-# Validate testset invariants
-python testset/validate_testset.py
-
-# Run complete pytest test suite (86 automated tests across 14 test suites)
-python -m pytest
-```
-
----
-
-## Running RAGPatrol CLI
-
-```bash
-# Stage 1: Classical Set-Based Retrieval Scoring
-python -m harness.runner --stage retrieval
-
-# Stage 2: Dual-Signal Faithfulness Scoring (Dry-run mode, embedding only)
-python -m harness.runner --stage faithfulness --dry-run
-
-# Stage 3: Dual-Signal Faithfulness Scoring (Live Gemini LLM Judge)
-python -m harness.runner --stage faithfulness
-
-# Stage 4: Full Pipeline with Cold vs. Warm Latency Comparison
-python -m harness.runner --stage all --cache-mode both
-
-# Stage 5: Automated Quality Regression Gate (CI/CD check)
-python -m harness.regression_check --config default --stage all
-
-# Stage 6: Side-by-Side Configuration Experiment Comparison
-python -m harness.runner --compare reranker_on reranker_off
-
-# Stage 7: Generate Markdown & HTML Reports
-python -m harness.runner --report both
-```
-
----
-
-## Proving Generality
-
-A common pitfall in evaluation tooling is tight coupling to a single system's internal API contract. To prove that RAGPatrol is **truly vendor-agnostic**, we engineered an independent stub application (`stub_app/fake_rag_api.py`) exposing a deliberately different API schema, paired with a dedicated 5-question test set (`testset/stub_questions.yaml`).
-
-### Disparate Schema Comparison
-
-| Dimension | Production System (CiteBase) | Independent Stub (`fake_rag_api`) | Canonical RAGPatrol DTO |
-| :--- | :--- | :--- | :--- |
-| **Port / Endpoint** | `http://127.0.0.1:8000/query` | `http://127.0.0.1:8001/query` | Configurable / `--base-url` |
-| **Answer Key** | `"answer"` | `"answer_text"` | `RAGResponse.answer` |
-| **Citations List** | `"sources": [{"source", "page", ...}]` | `"sources": [{"doc", "page", "content"}]` | `RAGResponse.retrieved_chunks` |
-| **Latency Metric** | RAGPatrol wall-clock measurement | `"response_time_ms": float` | `RAGResponse.latency_ms` |
-
-### Adapter & Auto-Detection Pattern
-
-The RAGPatrol client adapter ([`harness/clients/rag_client.py`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/harness/clients/rag_client.py)) and normalization layer ([`harness/clients/contracts.py`](file:///d:/Btech_Organized/Projects/LLM-Evaluation-Observability-Harness/harness/clients/contracts.py)) seamlessly bridge the gap:
-- **Explicit Flag**: `--adapter stub` forces stub normalization and automatically targets `testset/stub_questions.yaml`.
-- **Auto-Detection**: If the response payload contains `"answer_text"` or the target URL points to port `8001`, the adapter automatically normalizes the payload into standard `RetrievedChunk` and `RAGResponse` DTOs.
-
-### Running Against the Stub
-
-```bash
-# 1. Start the stub API in the background (port 8001)
-python -m stub_app.fake_rag_api
-
-# 2. Run the full RAGPatrol evaluation against the stub
-python -m harness.runner --adapter stub --base-url http://localhost:8001 --stage all
-```
-
-### Benchmark Scores Achieved on the Stub App
-
-```text
-================================================================================
- EVALUATION SUMMARY: Stage='all' | Cache='warm' | Config='default'
-================================================================================
- Total Queries: 5 | Successful: 5 | Failed: 0
- Mean Precision:     100.0%
- Mean Recall:        100.0%
- Mean F1:            100.0%
- Mean Faithfulness:  78.3%
- Hallucination Rate: 0.0% (0/5)
- Latency Profile:    p50=15.1ms | p95=15.1ms | p99=15.1ms | mean=15.0ms
---------------------------------------------------------------------------------
-```
-
-> [!NOTE]
-> **Generality Validation Guarantee:**
-> "RAGPatrol was validated against two independent systems: CiteBase and the stub app, proving it is a general-purpose evaluation tool."
-
-
-
-
-
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.

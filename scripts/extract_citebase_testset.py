@@ -21,9 +21,10 @@ logging.basicConfig(
 logger = logging.getLogger("extract_testset")
 
 DEFAULT_CITEBASE_JSON = Path(
-    r"D:\Btech_Organized\Projects"
-    r"\Production RAG-as-a-Service — multi-tenant document intelligence API"
-    r"\tests\eval\benchmark_dataset.json"
+    os.getenv(
+        "CITEBASE_BENCHMARK_PATH",
+        "../Production RAG-as-a-Service — multi-tenant document intelligence API/tests/eval/benchmark_dataset.json",
+    )
 )
 OUTPUT_YAML = Path("testset/questions.yaml")
 
