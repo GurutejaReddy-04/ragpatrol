@@ -13,6 +13,15 @@
 
 ---
 
+## 📖 Documentation Site
+
+A static documentation site is available at:
+**[https://GurutejaReddy-04.github.io/ragpatrol/](https://GurutejaReddy-04.github.io/ragpatrol/)**
+
+This site provides a quick overview of the project, key features, and links to the evaluation harness documentation.
+
+---
+
 ## Key Features
 
 - **Vendor-Agnostic Black-Box Evaluation:** Queries any RAG service adhering to a lightweight HTTP contract (`GET /health`, `POST /query`).

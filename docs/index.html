@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAGPatrol — LLM Evaluation & Observability Harness</title>
+    <meta name="description" content="Automated quality gating, faithfulness auditing, and latency profiling harness for production RAG systems.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #24344d;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-green: #34d399;
+            --accent-purple: #c084fc;
+            --accent-amber: #fbbf24;
+            --badge-bg: rgba(56, 189, 248, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 0 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 60px 0 80px 0;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--badge-bg);
+            color: var(--accent-blue);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 9999px;
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 44px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            color: var(--accent-green);
+            font-weight: 600;
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+        }
+
+        .description {
+            font-size: 17px;
+            color: var(--text-muted);
+            max-width: 760px;
+            margin: 0 auto 36px auto;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-blue);
+            color: #0f172a;
+        }
+
+        .btn-primary:hover {
+            background-color: #7dd3fc;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--bg-card-hover);
+            border-color: #475569;
+            transform: translateY(-1px);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            transition: border-color 0.2s ease;
+        }
+
+        .card:hover {
+            border-color: #475569;
+        }
+
+        .card-icon {
+            font-size: 28px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 19px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .card-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .preview-section {
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+            gap: 28px;
+        }
+
+        .preview-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .preview-caption {
+            padding: 16px 20px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .preview-caption strong {
+            color: var(--text-main);
+        }
+
+        footer {
+            text-align: center;
+            padding-top: 40px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            h1 { font-size: 32px; }
+            .subtitle { font-size: 17px; }
+            .preview-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="badge-pill">🛡️ Automated Quality Gating & Observability</div>
+            <h1>RAGPatrol</h1>
+            <p class="subtitle">Automated Quality Gating, Faithfulness Auditing, and Latency Profiling for Production RAG Systems</p>
+            <p class="description">
+                RAGPatrol is a surgical regression gating and observability harness designed to evaluate black-box
+                Retrieval-Augmented Generation (RAG) systems across retrieval precision/recall/F1, answer faithfulness,
+                and latency percentiles. It persists benchmark runs over time in SQLite or PostgreSQL, supports
+                side-by-side configuration comparisons, and gates CI/CD pipelines against quality degradations.
+            </p>
+            <div class="cta-group">
+                <a href="https://github.com/GurutejaReddy-04/ragpatrol" class="btn btn-primary" target="_blank" rel="noopener">
+                    ⭐ View on GitHub
+                </a>
+                <a href="https://github.com/GurutejaReddy-04/ragpatrol#quick-start" class="btn btn-secondary" target="_blank" rel="noopener">
+                    🚀 Quick Start Guide
+                </a>
+                <a href="https://github.com/GurutejaReddy-04/ragpatrol#comparison-mode" class="btn btn-secondary" target="_blank" rel="noopener">
+                    📊 Comparison Mode
+                </a>
+            </div>
+        </header>
+
+        <section class="grid">
+            <div class="card">
+                <div class="card-icon">🎯</div>
+                <h2 class="card-title">Classical Retrieval Scoring</h2>
+                <p class="card-text">Computes Precision, Recall, and F1 across version-controlled ground-truth chunk IDs with strict set-based alignment and edge-case resilience.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🧠</div>
+                <h2 class="card-title">Dual-Signal Faithfulness</h2>
+                <p class="card-text">Combines local embedding similarity (SentenceTransformers) with an LLM-as-a-judge (Google Gemini) to detect hallucinations without open-world conflation.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">⏱️</div>
+                <h2 class="card-title">Latency Percentile Profiling</h2>
+                <p class="card-text">Measures p50, p95, and p99 wall-clock latencies, contrasting cold-cache vs. warm-cache states and computing exact speedup multipliers.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🚦</div>
+                <h2 class="card-title">Automated CI/CD Gating</h2>
+                <p class="card-text">Detects quality regressions (>5% drop in retrieval, >10% in faithfulness, >20% latency inflation) and halts CI workflows before bad releases reach users.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">⚖️</div>
+                <h2 class="card-title">Side-by-Side Comparison</h2>
+                <p class="card-text">Directly compares two configurations (e.g., cross-encoder reranker enabled vs. disabled) with automated metric winner identification.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🔌</div>
+                <h2 class="card-title">Generality Proof</h2>
+                <p class="card-text">Includes an independent mock RAG service with an alternative API schema to prove true vendor-agnostic portability.</p>
+            </div>
+        </section>
+
+        <section class="preview-section">
+            <h2 class="section-title">Harness Previews & Output Artifacts</h2>
+            <div class="preview-grid">
+                <div class="preview-item">
+                    <img src="images/terminal.png" alt="Pytest Test Suite Passing">
+                    <div class="preview-caption">
+                        <strong>Pytest Suite:</strong> 86/86 tests passing with resilience against transient network failures and schema variations.
+                    </div>
+                </div>
+                <div class="preview-item">
+                    <img src="images/comparison-table.png" alt="Configuration Comparison Preview">
+                    <div class="preview-caption">
+                        <strong>Comparison Mode:</strong> Side-by-side benchmark of <code>reranker_on</code> vs <code>reranker_off</code> with winner analysis.
+                    </div>
+                </div>
+                <div class="preview-item">
+                    <img src="images/report-html.png" alt="HTML Evaluation Report">
+                    <div class="preview-caption">
+                        <strong>HTML Evaluation Report:</strong> Zero-dependency standalone report with KPI cards, category metrics, and print styles.
+                    </div>
+                </div>
+                <div class="preview-item">
+                    <img src="images/stub-app-run.png" alt="Stub App Execution">
+                    <div class="preview-caption">
+                        <strong>Generality Validation:</strong> Real-time execution against independent stub API on port 8001.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>
+                RAGPatrol is open-source software licensed under the <a href="https://github.com/GurutejaReddy-04/ragpatrol/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.
+                Maintained by <a href="https://github.com/GurutejaReddy-04" target="_blank" rel="noopener">Guruteja Reddy</a>.
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
