@@ -12,6 +12,10 @@ htmlcov/
 *.db
 *.sqlite3
 
+# Generated Evaluation Reports
+reports/*.html
+reports/*.md
+
 # Environment
 .env
 .venv
