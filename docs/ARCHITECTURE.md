@@ -4,8 +4,6 @@
 > **Status:** Active  
 > **Scope:** Black-Box Evaluation Harness, Contract Adapters, Pluggable Scorers, and CI Regression Gating
 
-This document outlines the architectural structure, component interactions, and data models of **RAGPatrol**.
-
 ---
 
 ## 1. Architectural Overview & Design Philosophy
@@ -17,7 +15,7 @@ RAGPatrol is designed as an **independent, black-box evaluation and observabilit
 2. **Deterministic Metric Grounding:** Measures retrieval quality against curated, invariant ground-truth chunk IDs via set mathematics, independent of stochastic LLM evaluations.
 3. **Multi-Signal Faithfulness Auditing:** Combines local deterministic dense embeddings (`all-MiniLM-L6-v2`) with LLM-as-a-judge reasoning (`gemini-2.5-flash` at temperature 0.0).
 4. **Longitudinal Persistence & Regression Gating:** Tracks evaluation metrics across Git commits and CI/CD runs in relational storage (SQLite / PostgreSQL) to block quality degradations.
-5. **Contract Normalization:** Maps heterogeneous proprietary schemas into canonical Pydantic v2 DTOs via pluggable adapters.
+5. **Adapters:** Uses Pydantic to parse different API responses into a standard format.
 
 ---
 

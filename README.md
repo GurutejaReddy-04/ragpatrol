@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/CI%2FCD-Passing-brightgreen?logo=github-actions&logoColor=white" alt="CI/CD Status">
 </p>
 
-**RAGPatrol** is a surgical regression gating and observability harness designed to evaluate black-box Retrieval-Augmented Generation (RAG) systems across retrieval precision/recall/F1, answer faithfulness, and latency percentiles. It persists benchmark runs over time in SQLite or PostgreSQL, supports side-by-side configuration comparisons, and gates CI/CD pipelines against quality degradations.
+**RAGPatrol** evaluates RAG systems by measuring retrieval metrics, answer faithfulness, and latency. It runs in CI to prevent regressions.
 
 ---
 
@@ -29,8 +29,8 @@ This site provides a quick overview of the project, key features, and links to t
 - **Latency Percentile Profiling:** Profiles p50, p95, and p99 response times with cold-cache vs. warm-cache comparison and speedup factor computation.
 - **Automated Longitudinal Regression Gating:** Evaluates historical run deltas against configured regression thresholds and exits with code `1` to block CI/CD regressions.
 - **Side-by-Side Configuration Experiments:** Compares two system configurations (e.g., reranker enabled vs. disabled) across quality metrics and per-category breakdowns.
-- **Multi-Format Tiered Reporting:** Exports zero-dependency standalone HTML reports and Markdown artifacts explicitly partitioning deterministic ground-truth metrics, continuous embedding signals, and stochastic LLM-judge scores.
-- **Interface Generality Demonstration:** Ships with an independent stub application (`stub_app/fake_rag_api.py`) exposing an alternative schema to demonstrate decoupled contract adaptation.
+- **Reporting:** Generates HTML and Markdown reports showing retrieval metrics, embedding similarity, and LLM-judge scores.
+- Includes a mock API (`stub_app/fake_rag_api.py`) for testing.
 
 ---
 

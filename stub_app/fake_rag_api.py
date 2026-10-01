@@ -1,14 +1,4 @@
-"""
-RAGPatrol Fake RAG API Stub Application.
-
-Implements an independent RAG service on port 8001 that deliberately exposes
-an alternative schema to prove that RAGPatrol is general-purpose
-and decoupled from any single vendor's API contract.
-
-Alternative schema:
-- /health: {"status": "ok", "service": "ragpatrol_stub"}
-- /query: returns {"answer_text": "...", "sources": [{"doc": "...", "page": 1, "content": "..."}], "response_time_ms": float}
-"""
+"""Mock RAG API for testing schema adapters."""
 
 import time
 from typing import Any, Optional, Union
@@ -24,21 +14,18 @@ app = FastAPI(
 
 
 class StubQueryRequest(BaseModel):
-    """Query request payload accepted by the fake RAG API."""
     question: str = Field(..., min_length=1, description="Input query text.")
     collection_name: Optional[str] = Field(default=None, description="Optional collection filter.")
     filters: Optional[dict[str, Any]] = Field(default=None, description="Optional metadata filters.")
 
 
 class StubSourceItem(BaseModel):
-    """Source item schema distinct from CiteBase's SourceReference."""
     doc: str
     page: int = 1
     content: str
 
 
 class StubQueryResponse(BaseModel):
-    """Response schema deliberately differing from CiteBase."""
     answer_text: str
     sources: list[StubSourceItem] = Field(default_factory=list)
     response_time_ms: float = Field(default=0.0)

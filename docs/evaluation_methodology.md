@@ -4,7 +4,7 @@
 > **Status:** Active  
 > **Target Systems:** RAG Services and HTTP Interfaces
 
-This document defines the mathematical, architectural, and procedural methodology behind **RAGPatrol**'s evaluation metrics, regression gating, and scoring algorithms.
+This document explains how RAGPatrol calculates its evaluation metrics.
 
 ---
 
@@ -76,7 +76,7 @@ $$
 ### Faithfulness vs. Fact-Checking
 > [!IMPORTANT]
 > **Faithfulness is groundedness in retrieved context, NOT open-world fact-checking.**
-> A generated answer is *faithful* if every claim it asserts is strictly substantiated by the retrieved context passages provided to the LLM during generation. If a target RAG system retrieves a document containing an error and faithfully summarizes that error, the answer is faithful. Conflating factual truth with grounded faithfulness is an evaluation anti-pattern that RAGPatrol avoids.
+> A generated answer is *faithful* if every claim it asserts is strictly substantiated by the retrieved context passages provided to the LLM during generation. If a target RAG system retrieves a document containing an error and faithfully summarizes that error, the answer is faithful. Faithfulness checks if answers match the context, not if they are factually true.
 
 ---
 

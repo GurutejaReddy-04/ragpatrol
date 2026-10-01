@@ -81,8 +81,6 @@ class FaithfulnessScorer:
         """
         Initialize the dual-signal scorer.
 
-        :param embedding_weight: Weight assigned to embedding similarity (hyperparameter).
-        :param llm_judge_weight: Weight assigned to normalized LLM judge score (hyperparameter).
         :param embedding_threshold: Floor below which answer is flagged as hallucination.
         :param judge_score_threshold: Ceiling at or below which judge triggers hallucination flag.
         :param gemini_client: Optional injected client (e.g. mock client for tests).

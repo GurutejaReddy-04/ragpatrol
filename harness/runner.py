@@ -40,7 +40,6 @@ logger = logging.getLogger("ragpatrol")
 
 @contextmanager
 def apply_env_overrides(overrides: dict[str, str]):
-    """Temporarily apply environment variable overrides during an evaluation pass."""
     original: dict[str, Optional[str]] = {}
     for k, v in overrides.items():
         original[k] = os.environ.get(k)
@@ -57,7 +56,7 @@ def apply_env_overrides(overrides: dict[str, str]):
 
 
 def get_git_commit_sha() -> Optional[str]:
-    """Capture current HEAD git commit SHA if executing within a git repository."""
+    """Get the current git commit SHA."""
     git_bin = shutil.which("git")
     if not git_bin:
         return None
