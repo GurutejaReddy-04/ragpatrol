@@ -2,7 +2,7 @@
 RAGPatrol — Regression detection and quality gating module.
 
 Compares the latest evaluation run against historical baselines to flag
-statistically meaningful degradations in retrieval, faithfulness, or latency percentiles.
+configured policy degradations in retrieval, faithfulness, or latency percentiles.
 Serves as the primary CI/CD automated gate.
 """
 

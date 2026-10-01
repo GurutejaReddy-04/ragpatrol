@@ -4,7 +4,7 @@
 
 <p align="left">
   <img src="https://img.shields.io/badge/Python-3.10%20%7C%203.11-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
-  <img src="https://img.shields.io/badge/Tests-86%20Passed-10B981?logo=pytest&logoColor=white" alt="Pytest 86 Passed">
+  <img src="https://img.shields.io/badge/Tests-85%20CI%20Passed%20%2B%201%20Live%20Probe-10B981?logo=pytest&logoColor=white" alt="Pytest: 85 CI Passed + 1 Live Probe">
   <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License">
   <img src="https://img.shields.io/badge/CI%2FCD-Passing-brightgreen?logo=github-actions&logoColor=white" alt="CI/CD Status">
 </p>
@@ -27,7 +27,7 @@ This site provides a quick overview of the project, key features, and links to t
 - **Validated Across Multiple Independently Shaped HTTP Interfaces:** Queries production RAG services (such as CiteBase) and independent mock APIs via normalized Pydantic DTO contracts.
 - **Dual-Signal Faithfulness Auditing:** Combines local semantic embedding similarity (`sentence-transformers/all-MiniLM-L6-v2`) with LLM-as-a-judge verification (Google Gemini configured at temperature 0.0 to reduce sampling variability) to detect hallucinations without open-world conflation.
 - **Latency Percentile Profiling:** Profiles p50, p95, and p99 response times with cold-cache vs. warm-cache comparison and speedup factor computation.
-- **Automated Longitudinal Regression Gating:** Evaluates historical run deltas against statistical thresholds and exits with code `1` to block CI/CD regressions.
+- **Automated Longitudinal Regression Gating:** Evaluates historical run deltas against configured regression thresholds and exits with code `1` to block CI/CD regressions.
 - **Side-by-Side Configuration Experiments:** Compares two system configurations (e.g., reranker enabled vs. disabled) across quality metrics and per-category breakdowns.
 - **Multi-Format Tiered Reporting:** Exports zero-dependency standalone HTML reports and Markdown artifacts explicitly partitioning deterministic ground-truth metrics, continuous embedding signals, and stochastic LLM-judge scores.
 - **Interface Generality Demonstration:** Ships with an independent stub application (`stub_app/fake_rag_api.py`) exposing an alternative schema to demonstrate decoupled contract adaptation.
