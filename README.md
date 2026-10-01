@@ -1,6 +1,6 @@
 # RAGPatrol — LLM Evaluation & Observability Harness
 
-<blockquote>Automated Quality Gating, Faithfulness Auditing, and Latency Profiling for Production RAG Systems</blockquote>
+<blockquote>Automated Quality Gating, Faithfulness Auditing, and Latency Profiling for RAG Systems</blockquote>
 
 <p align="left">
   <img src="https://img.shields.io/badge/Python-3.10%20%7C%203.11-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
@@ -370,13 +370,13 @@ streamlit run harness/reporting/dashboard.py
 
 A common failure mode in evaluation tooling is tight coupling to a single system's internal API contract. RAGPatrol decouples the evaluation engine from proprietary APIs via normalized Pydantic v2 DTOs (`RAGResponse`, `RetrievedChunk`, `RAGQueryRequest`) and dedicated normalization adapters:
 
-1. **Production System (CiteBase):** Normalizes citation arrays containing `chunk_id`, `rerank_score`, `section`, and `breadcrumb`.
+1. **Production Service (CiteBase):** Normalizes citation arrays containing `chunk_id`, `rerank_score`, `section`, and `breadcrumb`.
 2. **Independent Stub API (`stub_app/fake_rag_api.py`):** Normalizes an alternative schema (`answer_text`, `sources: [{doc, page, content}]`, `response_time_ms`).
 3. **Canonical Interface:** Accepts standard `{answer, retrieved_chunks, latency_ms}` payloads.
 
 ### Schema Comparison
 
-| Dimension | Production System (CiteBase) | Independent Stub (`fake_rag_api`) | Canonical RAGPatrol DTO |
+| Dimension | Production Service (CiteBase) | Independent Stub (`fake_rag_api`) | Canonical RAGPatrol DTO |
 | :--- | :--- | :--- | :--- |
 | **Endpoint** | `https://your-api.example.com/query` | `http://localhost:8001/query` | Configurable / `--base-url` |
 | **Answer Key** | `"answer"` | `"answer_text"` | `RAGResponse.answer` |

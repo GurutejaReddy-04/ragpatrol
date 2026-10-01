@@ -2,7 +2,7 @@
 
 > **Version:** 2.0  
 > **Status:** Active  
-> **Target Systems:** Production RAG Systems & Normalized HTTP Interfaces
+> **Target Systems:** RAG Services and HTTP Interfaces
 
 This document defines the mathematical, architectural, and procedural methodology behind **RAGPatrol**'s evaluation metrics, regression gating, and scoring algorithms.
 
@@ -38,7 +38,7 @@ Ground truth in RAGPatrol is defined at two levels:
 ## 3. Retrieval Relevance Definition
 
 ### Why Set Math Over Classification Vectors
-Classical classification evaluation in tools like `scikit-learn` assumes a static universe of binary labels with fixed-length vectors. Production RAG systems, by contrast, retrieve variable numbers of chunks (e.g., 1 to 5 chunks) from index collections containing thousands of passages. 
+Classical classification evaluation in tools like `scikit-learn` assumes a static universe of binary labels with fixed-length vectors. RAG systems, by contrast, retrieve variable numbers of chunks (e.g., 1 to 5 chunks) from index collections containing thousands of passages. 
 
 RAGPatrol evaluates retrieval as an **unranked set intersection** problem:
 $$\text{True Positives (TP)} = |\text{Retrieved} \cap \text{GroundTruth}|$$
@@ -126,7 +126,7 @@ When the LLM judge is unconfigured, rate-limited, or returns unparseable output 
 
 | Test Set File | Target Service | Count | Easy | Ambiguous | Edge |
 | :--- | :--- | :---: | :---: | :---: | :---: |
-| `testset/questions.yaml` | Production RAG (CiteBase) | 25 | 11 | 9 | 5 |
+| `testset/questions.yaml` | Production RAG Service (CiteBase) | 25 | 11 | 9 | 5 |
 | `testset/stub_questions.yaml` | Independent Mock API (`port 8001`) | 5 | 5 | 0 | 0 |
 
 The 25-query suite is designed as a **fast, surgical CI regression gate** executed on every pull request, rather than an all-day statistical census.
