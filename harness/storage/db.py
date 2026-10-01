@@ -49,8 +49,27 @@ class DatabaseManager:
         logger.debug("DatabaseManager initialized with URL: %s", self.database_url)
 
     def create_tables(self) -> None:
-        """Create all required relational tables if they do not exist."""
+        """Create all required relational tables if they do not exist, with defensive schema migration."""
         Base.metadata.create_all(self.engine)
+        # Defensive schema migration: ensure provenance columns exist on eval_runs for SQLite
+        if self.database_url.startswith("sqlite"):
+            with self.engine.connect() as conn:
+                try:
+                    result = conn.exec_driver_sql("PRAGMA table_info(eval_runs)").fetchall()
+                    existing_cols = {row[1] for row in result}
+                    if existing_cols:
+                        new_cols = [
+                            ("evaluation_schema_version", "VARCHAR(32) DEFAULT '2.0'"),
+                            ("benchmark_id", "VARCHAR(64) DEFAULT 'citebase_25'"),
+                            ("embedding_model", "VARCHAR(128) DEFAULT 'all-MiniLM-L6-v2'"),
+                            ("judge_model", "VARCHAR(64) DEFAULT 'gemini-2.5-flash'"),
+                        ]
+                        for col_name, col_def in new_cols:
+                            if col_name not in existing_cols:
+                                conn.exec_driver_sql(f"ALTER TABLE eval_runs ADD COLUMN {col_name} {col_def}")
+                        conn.commit()
+                except Exception as e:
+                    logger.warning("Auto-migration check for eval_runs encountered non-fatal error: %s", e)
 
     def get_session(self) -> Session:
         """Produce a new scoped database session."""
@@ -85,6 +104,10 @@ class DatabaseManager:
                         total_queries=run_data.get("total_queries", 0),
                         successful_queries=run_data.get("successful_queries", 0),
                         failed_queries=run_data.get("failed_queries", 0),
+                        evaluation_schema_version=run_data.get("evaluation_schema_version", "2.0"),
+                        benchmark_id=run_data.get("benchmark_id", "citebase_25"),
+                        embedding_model=run_data.get("embedding_model", "all-MiniLM-L6-v2"),
+                        judge_model=run_data.get("judge_model", "gemini-2.5-flash"),
                     )
 
                     if question_results:
@@ -147,6 +170,7 @@ class DatabaseManager:
         self,
         config_name: str = "default",
         stage: str = "all",
+        cache_state: Optional[str] = None,
         limit: int = 20,
     ) -> list[EvalRun]:
         """
@@ -154,6 +178,7 @@ class DatabaseManager:
 
         :param config_name: Targeted configuration tag.
         :param stage: Targeted evaluation pipeline stage.
+        :param cache_state: Optional cache state filter ('cold' | 'warm') to prevent run collisions.
         :param limit: Maximum historical records to return.
         :return: Chronological list of historical runs (newest first).
         """
@@ -165,9 +190,11 @@ class DatabaseManager:
                     EvalRun.config_name == config_name,
                     EvalRun.stage == stage,
                 )
-                .order_by(EvalRun.timestamp.desc())
-                .limit(limit)
             )
+            if cache_state is not None:
+                stmt = stmt.where(EvalRun.cache_state == cache_state)
+
+            stmt = stmt.order_by(EvalRun.timestamp.desc()).limit(limit)
             return list(session.scalars(stmt).all())
 
     def get_run_by_id(self, run_id: str) -> Optional[EvalRun]:

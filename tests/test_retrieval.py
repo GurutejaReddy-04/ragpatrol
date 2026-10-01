@@ -13,6 +13,7 @@ def scorer() -> RetrievalScorer:
     return RetrievalScorer()
 
 
+@pytest.mark.unit
 def test_perfect_match(scorer: RetrievalScorer) -> None:
     """All retrieved chunks are relevant and complete."""
     retrieved = ["doc1_chunk1", "doc1_chunk2"]
@@ -27,6 +28,7 @@ def test_perfect_match(scorer: RetrievalScorer) -> None:
     assert res.ground_truth_count == 2
 
 
+@pytest.mark.unit
 def test_no_overlap(scorer: RetrievalScorer) -> None:
     """Target API retrieved chunks disjoint from ground truth."""
     retrieved = ["doc2_chunk1", "doc2_chunk2"]
@@ -39,6 +41,7 @@ def test_no_overlap(scorer: RetrievalScorer) -> None:
     assert res.matched_count == 0
 
 
+@pytest.mark.unit
 def test_partial_overlap(scorer: RetrievalScorer) -> None:
     """1 out of 2 retrieved chunks is relevant; 1 out of 2 ground truth retrieved."""
     retrieved = ["doc1_chunk1", "doc2_chunk99"]
@@ -51,6 +54,7 @@ def test_partial_overlap(scorer: RetrievalScorer) -> None:
     assert res.matched_count == 1
 
 
+@pytest.mark.unit
 def test_empty_retrieved_list(scorer: RetrievalScorer) -> None:
     """Target API returned 0 chunks (e.g. strict confidence filtering or total miss)."""
     retrieved: list[str] = []
@@ -64,6 +68,7 @@ def test_empty_retrieved_list(scorer: RetrievalScorer) -> None:
     assert res.matched_count == 0
 
 
+@pytest.mark.unit
 def test_empty_ground_truth_list(scorer: RetrievalScorer) -> None:
     """Defensive check: ungrounded question with empty ground truth."""
     retrieved = ["doc1_chunk1"]
@@ -77,6 +82,7 @@ def test_empty_ground_truth_list(scorer: RetrievalScorer) -> None:
     assert res.matched_count == 0
 
 
+@pytest.mark.unit
 def test_duplicate_retrieved_ids_handled_as_set(scorer: RetrievalScorer) -> None:
     """Verifies that duplicate chunks returned by flawed rankers are deduplicated."""
     retrieved = ["doc1_chunk1", "doc1_chunk1"]
@@ -90,6 +96,7 @@ def test_duplicate_retrieved_ids_handled_as_set(scorer: RetrievalScorer) -> None
     assert res.matched_count == 1
 
 
+@pytest.mark.unit
 def test_compute_retrieval_metrics_helper() -> None:
     """Verify raw helper function returning dict."""
     metrics = compute_retrieval_metrics(["a", "b"], ["b", "c"])

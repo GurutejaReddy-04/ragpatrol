@@ -12,6 +12,7 @@ htmlcov/
 
 # Databases & Runtime Data
 *.db
+!fixtures/reference_eval_runs.db
 *.sqlite
 *.sqlite3
 

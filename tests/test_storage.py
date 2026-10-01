@@ -20,12 +20,56 @@ def in_memory_db():
     )
 
 
+@pytest.mark.mocked_integration
 def test_create_tables_idempotent(in_memory_db: DatabaseManager) -> None:
-    """Calling create_tables multiple times must not raise errors."""
+    """Calling create_tables multiple times is idempotent and auto-migrates stale pre-v2 SQLite schemas."""
     in_memory_db.create_tables()
     in_memory_db.create_tables()
 
+    # Verify stale pre-v2 schema migration: create raw engine with legacy schema missing provenance columns
+    from sqlalchemy import create_engine
+    stale_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    with stale_engine.connect() as conn:
+        conn.exec_driver_sql(
+            """
+            CREATE TABLE eval_runs (
+                id VARCHAR(64) PRIMARY KEY,
+                timestamp DATETIME,
+                config_name VARCHAR(64),
+                git_commit_sha VARCHAR(64),
+                cache_state VARCHAR(16),
+                stage VARCHAR(32),
+                total_queries INTEGER,
+                successful_queries INTEGER,
+                failed_queries INTEGER
+            )
+            """
+        )
+        conn.exec_driver_sql(
+            "INSERT INTO eval_runs VALUES ('legacy_run_01', '2026-01-01 00:00:00', 'default', 'sha1', 'warm', 'all', 25, 25, 0)"
+        )
+        conn.commit()
 
+    # Wrap stale database with DatabaseManager; create_tables() must auto-migrate missing columns
+    migrated_db = DatabaseManager.__new__(DatabaseManager)
+    migrated_db.database_url = "sqlite:///:memory:"
+    migrated_db.engine = stale_engine
+    migrated_db.session_factory = in_memory_db.session_factory
+    migrated_db.create_tables()
+
+    # Check that provenance columns now exist in eval_runs
+    with stale_engine.connect() as conn:
+        cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(eval_runs)").fetchall()}
+        assert "evaluation_schema_version" in cols
+        assert "benchmark_id" in cols
+        assert "embedding_model" in cols
+        assert "judge_model" in cols
+
+    # Idempotent re-run on migrated database
+    migrated_db.create_tables()
+
+
+@pytest.mark.mocked_integration
 def test_sqlite_timeout_configured() -> None:
     """Verify EC-9: SQLite database manager sets timeout in connect_args."""
     db = DatabaseManager(database_url="sqlite:///:memory:", poolclass=StaticPool)
@@ -33,6 +77,7 @@ def test_sqlite_timeout_configured() -> None:
     assert db.engine is not None
 
 
+@pytest.mark.mocked_integration
 def test_save_run_with_dict_data(in_memory_db: DatabaseManager) -> None:
     """Persist run data provided as dictionaries."""
     run_dict = {
@@ -71,6 +116,7 @@ def test_save_run_with_dict_data(in_memory_db: DatabaseManager) -> None:
     assert saved.metrics[0].value == 1.0
 
 
+@pytest.mark.mocked_integration
 def test_save_run_with_orm_object(in_memory_db: DatabaseManager) -> None:
     """Persist run data provided as an ORM EvalRun instance."""
     eval_run = EvalRun(
@@ -91,6 +137,7 @@ def test_save_run_with_orm_object(in_memory_db: DatabaseManager) -> None:
     assert len(saved.question_results) == 1
 
 
+@pytest.mark.mocked_integration
 def test_save_run_none_metric_value(in_memory_db: DatabaseManager) -> None:
     """Verify EC-8 fix: None metric values should safely coalesce to 0.0 without TypeError."""
     run_dict = {
@@ -108,6 +155,7 @@ def test_save_run_none_metric_value(in_memory_db: DatabaseManager) -> None:
     assert saved.metrics[0].value == 0.0
 
 
+@pytest.mark.mocked_integration
 def test_get_latest_run(in_memory_db: DatabaseManager) -> None:
     """Fetch the latest run matching config and stage."""
     # Initially None
@@ -125,6 +173,7 @@ def test_get_latest_run(in_memory_db: DatabaseManager) -> None:
     assert latest.id == "run_new"
 
 
+@pytest.mark.mocked_integration
 def test_get_run_history(in_memory_db: DatabaseManager) -> None:
     """Fetch run history ordered chronologically descending."""
     for i in range(5):
@@ -142,6 +191,7 @@ def test_get_run_history(in_memory_db: DatabaseManager) -> None:
     assert history[2].id == "run_hist_2"
 
 
+@pytest.mark.mocked_integration
 def test_get_run_by_id(in_memory_db: DatabaseManager) -> None:
     """Fetch specific run by primary key."""
     in_memory_db.save_run({"id": "run_specific_id", "config_name": "spec_cfg"})

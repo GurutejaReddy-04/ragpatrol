@@ -47,18 +47,29 @@ class RegressionChecker:
         if thresholds:
             self.thresholds.update(thresholds)
 
-    def check(self, config_name: str = "default", stage: str = "all") -> dict[str, Any]:
+    def check(
+        self,
+        config_name: str = "default",
+        stage: str = "all",
+        cache_state: Optional[str] = "warm",
+    ) -> dict[str, Any]:
         """
-        Compare current run against the preceding historical run for the given config and stage.
+        Compare current run against the preceding historical run for the given config, stage, and cache state.
 
         :param config_name: Targeted configuration tag.
         :param stage: Evaluation pipeline stage.
+        :param cache_state: Optional cache state filter ('cold' | 'warm') to prevent comparing cold vs warm runs.
         :return: Structured regression result dictionary.
         """
-        history = self.db.get_run_history(config_name=config_name, stage=stage, limit=2)
+        history = self.db.get_run_history(
+            config_name=config_name,
+            stage=stage,
+            cache_state=cache_state,
+            limit=2,
+        )
 
         if not history:
-            logger.info("No runs found in database for config='%s', stage='%s'.", config_name, stage)
+            logger.info("No runs found in database for config='%s', stage='%s', cache='%s'.", config_name, stage, cache_state)
             return {
                 "passed": True,
                 "status": "no_prior_run",
@@ -171,10 +182,16 @@ class RegressionChecker:
             "previous_run_id": previous_run.id,
         }
 
-    def print_report(self, result: dict[str, Any], config_name: str, stage: str) -> None:
+    def print_report(
+        self,
+        result: dict[str, Any],
+        config_name: str = "default",
+        stage: str = "all",
+        cache_state: Optional[str] = "warm",
+    ) -> None:
         """Output human-readable terminal report."""
         print("\n" + "=" * 80)
-        print(f" REGRESSION CHECK REPORT: Config='{config_name}' | Stage='{stage}'")
+        print(f" REGRESSION CHECK REPORT: Config='{config_name}' | Stage='{stage}' | Cache='{cache_state or 'any'}'")
         print("=" * 80)
 
         if result.get("status") == "no_prior_run":
@@ -235,11 +252,27 @@ def main() -> None:
     )
     parser.add_argument("--config", default="default", help="Configuration label.")
     parser.add_argument("--stage", default="all", help="Evaluation pipeline stage.")
+    parser.add_argument(
+        "--cache-state",
+        default="warm",
+        choices=["warm", "cold", "any"],
+        help="Filter runs by cache state to prevent comparing cold vs warm runs within the same execution.",
+    )
     args = parser.parse_args()
 
+    effective_cache_state = None if args.cache_state == "any" else args.cache_state
     checker = RegressionChecker()
-    result = checker.check(config_name=args.config, stage=args.stage)
-    checker.print_report(result, config_name=args.config, stage=args.stage)
+    result = checker.check(
+        config_name=args.config,
+        stage=args.stage,
+        cache_state=effective_cache_state,
+    )
+    checker.print_report(
+        result,
+        config_name=args.config,
+        stage=args.stage,
+        cache_state=effective_cache_state,
+    )
 
     if not result["passed"]:
         logger.error("Regression check failed! Quality gate blocked.")

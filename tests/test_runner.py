@@ -54,6 +54,7 @@ def mock_runner(tmp_path):
     return runner
 
 
+@pytest.mark.mocked_integration
 def test_apply_env_overrides_context_manager():
     """Verify apply_env_overrides sets and safely restores environment variables."""
     var_name = "TEST_HARNESS_VAR_OVERRIDE_123"
@@ -71,12 +72,14 @@ def test_apply_env_overrides_context_manager():
     assert "NEW_HARNESS_VAR_456" not in os.environ
 
 
+@pytest.mark.mocked_integration
 def test_get_git_commit_sha():
     """get_git_commit_sha should return a string SHA or None without raising an uncaught exception."""
     sha = get_git_commit_sha()
     assert sha is None or (isinstance(sha, str) and len(sha) >= 7)
 
 
+@pytest.mark.mocked_integration
 def test_load_testset_valid_yaml(mock_runner):
     """Load valid testset from stub_questions.yaml."""
     path = Path("testset/stub_questions.yaml")
@@ -88,12 +91,14 @@ def test_load_testset_valid_yaml(mock_runner):
         assert "question" in questions[0]
 
 
+@pytest.mark.mocked_integration
 def test_load_testset_missing_file_raises(mock_runner):
     """Loading from a non-existent path raises FileNotFoundError."""
     with pytest.raises(FileNotFoundError):
         mock_runner.load_testset("non_existent_path_to_testset_999.yaml")
 
 
+@pytest.mark.mocked_integration
 def test_load_testset_invalid_yaml_raises(mock_runner, tmp_path):
     """Verify EC-12 fix: Corrupted YAML raises ConfigValidationError instead of dumping a raw trace."""
     corrupt_file = tmp_path / "corrupt.yaml"
@@ -105,6 +110,7 @@ def test_load_testset_invalid_yaml_raises(mock_runner, tmp_path):
     assert "Failed to parse testset YAML" in str(exc_info.value)
 
 
+@pytest.mark.mocked_integration
 def test_load_testset_non_list_raises(mock_runner, tmp_path):
     """A YAML file containing a dict instead of a list must raise ValueError."""
     dict_file = tmp_path / "dict_testset.yaml"
@@ -116,6 +122,7 @@ def test_load_testset_non_list_raises(mock_runner, tmp_path):
     assert "Expected a list of questions" in str(exc_info.value)
 
 
+@pytest.mark.mocked_integration
 def test_execute_pass_with_mock_client(mock_runner):
     """Execute a full pass and verify StageRunResult fields and metrics aggregation."""
     questions = [
@@ -146,6 +153,7 @@ def test_execute_pass_with_mock_client(mock_runner):
     assert result.question_summaries[0].status == "success"
 
 
+@pytest.mark.mocked_integration
 def test_execute_pass_handles_query_failure_gracefully(mock_runner):
     """Simulate a network exception on one query; the pass must continue and record error status."""
     # Transport that returns 500 error

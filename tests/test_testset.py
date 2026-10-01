@@ -10,12 +10,14 @@ import pytest
 from testset.validate_testset import main as validate_main, validate_testset
 
 
+@pytest.mark.unit
 def test_validate_testset_execution() -> None:
     """Execute testset validation directly and assert a clean exit code 0."""
     result = validate_main()
     assert result == 0, "testset/validate_testset.py main() returned non-zero exit code"
 
 
+@pytest.mark.unit
 def test_validate_testset_detailed() -> None:
     """Verify detailed validation output and ensure zero structural errors."""
     is_valid, errors = validate_testset(Path("testset/questions.yaml"))

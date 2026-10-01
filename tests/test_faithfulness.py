@@ -21,6 +21,7 @@ def mock_gemini_client() -> MagicMock:
     return client
 
 
+@pytest.mark.mocked_integration
 def test_embedding_similarity_identical_text() -> None:
     """Identical text pairs should produce cosine similarity near 1.0."""
     scorer = FaithfulnessScorer()
@@ -30,6 +31,7 @@ def test_embedding_similarity_identical_text() -> None:
     assert lat >= 0.0
 
 
+@pytest.mark.mocked_integration
 def test_embedding_similarity_dissimilar_text() -> None:
     """Unrelated topics should produce low similarity."""
     scorer = FaithfulnessScorer()
@@ -39,6 +41,7 @@ def test_embedding_similarity_dissimilar_text() -> None:
     assert sim < 0.40
 
 
+@pytest.mark.mocked_integration
 def test_embedding_similarity_empty_context() -> None:
     """Empty context should yield 0.0 similarity."""
     scorer = FaithfulnessScorer()
@@ -46,6 +49,7 @@ def test_embedding_similarity_empty_context() -> None:
     assert sim == 0.0
 
 
+@pytest.mark.mocked_integration
 def test_llm_judge_valid_json_response(mock_gemini_client: MagicMock) -> None:
     """Mock judge returning valid JSON."""
     canned_json = """```json
@@ -71,6 +75,7 @@ def test_llm_judge_valid_json_response(mock_gemini_client: MagicMock) -> None:
     assert raw is not None
 
 
+@pytest.mark.mocked_integration
 def test_llm_judge_malformed_json_fallback(mock_gemini_client: MagicMock) -> None:
     """Mock judge returning malformed non-JSON payload triggers fallback without crashing."""
     mock_gemini_client.models.generate_content.return_value = MockGeminiResponse("Sorry, I cannot format as JSON.")
@@ -86,6 +91,7 @@ def test_llm_judge_malformed_json_fallback(mock_gemini_client: MagicMock) -> Non
     assert "failed after 2 attempts" in reasoning
 
 
+@pytest.mark.mocked_integration
 def test_combined_score_calculation(mock_gemini_client: MagicMock) -> None:
     """
     Verify weighted combination:
@@ -117,6 +123,7 @@ def test_combined_score_calculation(mock_gemini_client: MagicMock) -> None:
     assert res.is_hallucination is False
 
 
+@pytest.mark.mocked_integration
 def test_hallucination_flagging(mock_gemini_client: MagicMock) -> None:
     """Low judge score (<= 2) must trigger hallucination flag."""
     mock_json = '{"faithfulness_score": 2, "reasoning": "Unsupported claim", "unsupported_claims": ["claim X"]}'
@@ -131,6 +138,7 @@ def test_hallucination_flagging(mock_gemini_client: MagicMock) -> None:
     assert "claim X" in res.unsupported_claims
 
 
+@pytest.mark.mocked_integration
 def test_dry_run_mode() -> None:
     """In dry-run mode, no external LLM call is made."""
     scorer = FaithfulnessScorer()

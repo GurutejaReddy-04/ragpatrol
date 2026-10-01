@@ -13,6 +13,7 @@ def profiler() -> LatencyProfiler:
     return LatencyProfiler()
 
 
+@pytest.mark.unit
 def test_percentile_computation_known_array(profiler: LatencyProfiler) -> None:
     """Test percentile calculations against mathematically defined array [1, 2, 3, 4, 5]."""
     data = [1.0, 2.0, 3.0, 4.0, 5.0]
@@ -28,6 +29,7 @@ def test_percentile_computation_known_array(profiler: LatencyProfiler) -> None:
     assert profile.std_ms > 1.4  # std dev for 1..5 is sqrt(2) ~ 1.414
 
 
+@pytest.mark.unit
 def test_empty_latency_array_handling(profiler: LatencyProfiler) -> None:
     """Empty list returns zeroed profile without raising ZeroDivisionError."""
     profile = profiler.compute_percentiles([])
@@ -36,6 +38,7 @@ def test_empty_latency_array_handling(profiler: LatencyProfiler) -> None:
     assert profile.mean_ms == 0.0
 
 
+@pytest.mark.unit
 def test_single_element_array(profiler: LatencyProfiler) -> None:
     """Single sample yields identical percentiles."""
     profile = profiler.compute_percentiles([125.5])
@@ -46,6 +49,7 @@ def test_single_element_array(profiler: LatencyProfiler) -> None:
     assert profile.std_ms == 0.0
 
 
+@pytest.mark.unit
 def test_cold_warm_cache_comparison() -> None:
     """Verify empirical improvement ratio calculation."""
     cold = LatencyProfile(

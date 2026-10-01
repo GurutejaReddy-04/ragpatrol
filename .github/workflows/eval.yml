@@ -26,18 +26,44 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # 1. Restore rolling evaluation database cache (or initialize from reference baseline)
+      - name: Restore Rolling Evaluation Database Cache
+        uses: actions/cache@v4
+        id: eval-db-cache
+        with:
+          path: eval_runs.db
+          key: ragpatrol-eval-db-v2-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            ragpatrol-eval-db-v2-${{ runner.os }}-${{ github.ref_name }}-
+            ragpatrol-eval-db-v2-${{ runner.os }}-main-
+
+      - name: Initialize Reference Baseline Database on Cache Miss
+        if: steps.eval-db-cache.outputs.cache-hit != 'true'
+        run: |
+          test -f eval_runs.db || cp fixtures/reference_eval_runs.db eval_runs.db
+
+      # 2. Run ground truth validation and 85 non-live tests
       - name: Validate Ground-Truth Dataset Schema
         run: |
           python testset/validate_testset.py
 
-      - name: Run Full Test Suite (86 Unit & Integration Tests)
+      - name: Run Non-Live Test Suite (85 Tests)
         run: |
-          python -m pytest tests/ -v --tb=short
+          python -m pytest tests/ -m "not live_external_integration" -v --tb=short
 
-      - name: Execute End-to-End Dry-Run & Generality Gate
+      # 3. Execute stub-based evaluation run (records warm pass to eval_runs.db)
+      - name: Execute End-to-End Evaluation Run
         run: |
-          # Start independent stub RAG API in background
           python -m uvicorn stub_app.fake_rag_api:app --host 127.0.0.1 --port 8001 &
           sleep 2
-          # Execute RAGPatrol against stub API
           python -m harness.runner --adapter stub --base-url http://127.0.0.1:8001 --stage all --cache-mode both --dry-run
+
+      # 4. Automated Longitudinal Regression Gate (compares matching warm runs)
+      - name: Execute Automated Quality Regression Gate
+        run: |
+          python -m harness.regression_check --config default --stage all --cache-state warm
+
+      # 5. Verify deliberate regression gate rejection logic
+      - name: Verify Quality Gate Failure on Deliberate Regression
+        run: |
+          python examples/regression_walkthrough.py

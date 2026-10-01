@@ -52,11 +52,29 @@ class MarkdownReportGenerator:
             "",
             "## Summary Quality Metrics",
             "",
+            "### Tier 1: Deterministic Retrieval Metrics (Ground-Truth Set Verification)",
+            "> *Deterministic relative to curated ground-truth annotations. Zero LLM dependency.*",
+            "",
             "| Metric | Result | Benchmark Target | Status |",
             "| :--- | :---: | :---: | :---: |",
             f"| **Retrieval Precision** | {run.mean_precision * 100:.1f}% | >= 70.0% | {'✅ Pass' if run.mean_precision >= 0.70 else '⚠️ Review'} |",
             f"| **Retrieval Recall** | {run.mean_recall * 100:.1f}% | >= 70.0% | {'✅ Pass' if run.mean_recall >= 0.70 else '⚠️ Review'} |",
             f"| **Retrieval F1 Score** | {run.mean_f1 * 100:.1f}% | >= 70.0% | {'✅ Pass' if run.mean_f1 >= 0.70 else '⚠️ Review'} |",
+            "",
+            "### Tier 2: Continuous Semantic Representation Signals (Local Embedding Proxy)",
+            "> *Local continuous representation similarity using `sentence-transformers/all-MiniLM-L6-v2`.*",
+            "",
+            "| Metric | Result | Target Baseline | Status |",
+            "| :--- | :---: | :---: | :---: |",
+            f"| **Mean Embedding Similarity** | {run.mean_embedding_similarity:.2f} | >= 0.60 | {'✅ Pass' if run.mean_embedding_similarity >= 0.60 else '⚠️ Review'} |",
+            "",
+            "### Tier 3: Model-Based Judge Signals (Stochastic LLM-as-a-Judge)",
+            "> [!NOTE]",
+            "> **Model-Dependence Notice:** Tier 3 signals rely on prompt-based LLM judgment (`gemini-2.5-flash`). They provide groundedness heuristics rather than objective ground-truth measurements, and are subject to provider model updates and prompt sensitivity.",
+            "",
+            "| Metric | Result | Benchmark Target | Status |",
+            "| :--- | :---: | :---: | :---: |",
+            f"| **Mean LLM Judge Score** | {run.mean_llm_judge_score:.2f} / 5.0 | >= 3.50 / 5.0 | {'✅ Pass' if run.mean_llm_judge_score >= 3.50 else '⚠️ Review'} |",
             f"| **Faithfulness Groundedness** | {run.mean_faithfulness * 100:.1f}% | >= 75.0% | {'✅ Pass' if run.mean_faithfulness >= 0.75 else '⚠️ Review'} |",
             f"| **Hallucination Rate** | {run.hallucination_rate * 100:.1f}% ({run.hallucination_count}/{run.total_queries}) | < 10.0% | {'✅ Pass' if run.hallucination_rate < 0.10 else '⚠️ High'} |",
             "",
@@ -89,13 +107,15 @@ class MarkdownReportGenerator:
         lines.extend([
             "## Per-Category Performance Breakdown",
             "",
-            "| Category | Queries | Precision | Recall | F1 Score | Faithfulness | Hallucination Rate |",
-            "| :--- | :---: | :---: | :---: | :---: | :---: | :---: |",
+            "| Category | Queries | Precision | Recall | F1 Score | Faithfulness | Emb Sim | Judge (1-5) | Hallucination Rate |",
+            "| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
         ])
         for cat, vals in run.category_metrics.items():
+            emb_val = vals.get("embedding_similarity", 0.0)
+            judge_val = vals.get("llm_judge_score", 0.0)
             lines.append(
                 f"| `{cat}` | {vals['count']} | {vals['precision']*100:.1f}% | {vals['recall']*100:.1f}% | "
-                f"{vals['f1']*100:.1f}% | {vals['faithfulness']*100:.1f}% | {vals['hallucination_rate']*100:.1f}% |"
+                f"{vals['f1']*100:.1f}% | {vals['faithfulness']*100:.1f}% | {emb_val:.2f} | {judge_val:.1f} | {vals['hallucination_rate']*100:.1f}% |"
             )
         lines.append("")
 

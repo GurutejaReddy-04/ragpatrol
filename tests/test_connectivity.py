@@ -37,6 +37,7 @@ DEFAULT_TARGET_URL = "http://127.0.0.1:8000"
 CITEBASE_IS_RUNNING = _ping_target(DEFAULT_TARGET_URL)
 
 
+@pytest.mark.live_external_integration
 @pytest.mark.skipif(
     not CITEBASE_IS_RUNNING,
     reason=f"CiteBase target service is not listening at {DEFAULT_TARGET_URL}",
@@ -53,6 +54,7 @@ def test_citebase_health_connectivity() -> None:
         assert is_healthy is True, "Expected CiteBase health check to return True"
 
 
+@pytest.mark.mocked_integration
 def test_rag_client_with_mock_transport() -> None:
     """
     Verify RAGClient operational flow using httpx.MockTransport.
@@ -103,6 +105,7 @@ def test_rag_client_with_mock_transport() -> None:
 
 
 
+@pytest.mark.unit
 def test_citebase_citation_adapter_normalization() -> None:
     """
     Verify CiteBase citation payload maps correctly to normalized RetrievedChunk DTOs.
@@ -159,6 +162,7 @@ def test_citebase_citation_adapter_normalization() -> None:
     assert chunk_1.score == 0.72
 
 
+@pytest.mark.unit
 def test_config_env_validation() -> None:
     """
     Verify that validate_env() fails early when required secrets are missing.

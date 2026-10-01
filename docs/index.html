@@ -248,6 +248,9 @@
                 <a href="https://github.com/GurutejaReddy-04/ragpatrol" class="btn btn-primary" target="_blank" rel="noopener">
                     ⭐ View on GitHub
                 </a>
+                <a href="https://github.com/GurutejaReddy-04/ragpatrol/blob/main/docs/evaluation_methodology.md" class="btn btn-secondary" target="_blank" rel="noopener">
+                    📐 11-Point Methodology
+                </a>
                 <a href="https://github.com/GurutejaReddy-04/ragpatrol#quick-start" class="btn btn-secondary" target="_blank" rel="noopener">
                     🚀 Quick Start Guide
                 </a>
@@ -261,12 +264,12 @@
             <div class="card">
                 <div class="card-icon">🎯</div>
                 <h2 class="card-title">Classical Retrieval Scoring</h2>
-                <p class="card-text">Computes Precision, Recall, and F1 across version-controlled ground-truth chunk IDs with strict set-based alignment and edge-case resilience.</p>
+                <p class="card-text">Computes Precision, Recall, and F1 relative to curated ground-truth annotations using strict unranked set math (|Retrieved ∩ GroundTruth|).</p>
             </div>
             <div class="card">
                 <div class="card-icon">🧠</div>
                 <h2 class="card-title">Dual-Signal Faithfulness</h2>
-                <p class="card-text">Combines local embedding similarity (SentenceTransformers) with an LLM-as-a-judge (Google Gemini) to detect hallucinations without open-world conflation.</p>
+                <p class="card-text">Combines local embedding similarity (SentenceTransformers) with an LLM-as-a-judge (Google Gemini @ temp 0.0) to detect hallucinations without open-world conflation.</p>
             </div>
             <div class="card">
                 <div class="card-icon">⏱️</div>
@@ -276,7 +279,7 @@
             <div class="card">
                 <div class="card-icon">🚦</div>
                 <h2 class="card-title">Automated CI/CD Gating</h2>
-                <p class="card-text">Detects quality regressions (>5% drop in retrieval, >10% in faithfulness, >20% latency inflation) and halts CI workflows before bad releases reach users.</p>
+                <p class="card-text">Detects quality regressions (>5% drop in retrieval, >10% in faithfulness, >20% latency inflation) and halts CI workflows before regressions reach users.</p>
             </div>
             <div class="card">
                 <div class="card-icon">⚖️</div>
@@ -285,8 +288,8 @@
             </div>
             <div class="card">
                 <div class="card-icon">🔌</div>
-                <h2 class="card-title">Generality Proof</h2>
-                <p class="card-text">Includes an independent mock RAG service with an alternative API schema to prove true vendor-agnostic portability.</p>
+                <h2 class="card-title">Multi-Schema Interface Generality</h2>
+                <p class="card-text">Validated against multiple independently shaped HTTP interfaces (CiteBase & independent stub) via normalized Pydantic DTO adapters.</p>
             </div>
         </section>
 
@@ -296,7 +299,7 @@
                 <div class="preview-item">
                     <img src="images/terminal.png" alt="Pytest Test Suite Passing">
                     <div class="preview-caption">
-                        <strong>Pytest Suite:</strong> 86/86 tests passing with resilience against transient network failures and schema variations.
+                        <strong>Pytest Suite:</strong> 86 tests categorized across unit, mocked integration, local integration, and live socket tiers.
                     </div>
                 </div>
                 <div class="preview-item">

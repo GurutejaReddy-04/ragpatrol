@@ -44,3 +44,9 @@ addopts = "-v --tb=short"
 testpaths = ["tests"]
 pythonpath = ["."]
 filterwarnings = ["ignore::DeprecationWarning"]
+markers = [
+    "unit: Fast deterministic in-memory unit tests with zero network or socket dependencies.",
+    "mocked_integration: Integration tests using mock transports or local embedding models.",
+    "local_integration: Tests interacting with local subprocesses or in-memory FastAPI stub applications.",
+    "live_external_integration: End-to-end tests requiring live local or remote network sockets.",
+]

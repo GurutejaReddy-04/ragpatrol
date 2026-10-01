@@ -36,6 +36,7 @@ def sample_stub_payload() -> dict[str, Any]:
     }
 
 
+@pytest.mark.unit
 def test_normalize_stub_response_mapping(sample_stub_payload: dict[str, Any]) -> None:
     """Verify that normalize_stub_response correctly maps all alternative fields to canonical DTOs."""
     response: RAGResponse = normalize_stub_response(sample_stub_payload, latency_ms=25.0)
@@ -58,6 +59,7 @@ def test_normalize_stub_response_mapping(sample_stub_payload: dict[str, Any]) ->
     assert response.raw_response == sample_stub_payload
 
 
+@pytest.mark.unit
 def test_auto_detection_with_answer_text(sample_stub_payload: dict[str, Any]) -> None:
     """Verify that normalize_target_response automatically detects stub schema when answer_text is present."""
     response: RAGResponse = normalize_target_response(
@@ -72,6 +74,7 @@ def test_auto_detection_with_answer_text(sample_stub_payload: dict[str, Any]) ->
     assert response.latency_ms == 18.75
 
 
+@pytest.mark.unit
 def test_explicit_stub_adapter_flag(sample_stub_payload: dict[str, Any]) -> None:
     """Verify that specifying adapter='stub' enforces stub normalization."""
     response: RAGResponse = normalize_target_response(
@@ -84,6 +87,7 @@ def test_explicit_stub_adapter_flag(sample_stub_payload: dict[str, Any]) -> None
     assert response.retrieved_chunks[0].chunk_id == "doc_asyncio_guide_chunk_1"
 
 
+@pytest.mark.unit
 def test_stub_empty_sources() -> None:
     """Verify handling of stub responses with zero retrieved sources."""
     empty_payload = {
@@ -99,6 +103,7 @@ def test_stub_empty_sources() -> None:
     assert response.latency_ms == 11.2
 
 
+@pytest.mark.unit
 def test_rag_client_url_auto_detection() -> None:
     """Verify that RAGClient automatically configures the stub adapter when targeting port 8001."""
     client_stub = RAGClient(base_url="http://127.0.0.1:8001")
@@ -111,6 +116,7 @@ def test_rag_client_url_auto_detection() -> None:
     assert client_default.adapter == "auto"
 
 
+@pytest.mark.mocked_integration
 def test_rag_client_with_stub_adapter_mock_transport(sample_stub_payload: dict[str, Any]) -> None:
     """Verify end-to-end RAGClient query dispatch with mock transport returning stub schema."""
 

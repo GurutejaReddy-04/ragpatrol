@@ -20,6 +20,7 @@ from harness.config import (
 from harness.exceptions import ConfigValidationError
 
 
+@pytest.mark.unit
 def test_default_settings_have_sensible_values() -> None:
     """Check defaults for target_api, testset, storage, metrics, judge."""
     settings = HarnessSettings()
@@ -43,6 +44,7 @@ def test_default_settings_have_sensible_values() -> None:
     assert settings.judge.model == "gemini-2.5-flash"
 
 
+@pytest.mark.unit
 def test_load_from_yaml_valid_config(tmp_path, monkeypatch) -> None:
     """Load from real config.yaml and verify values."""
     monkeypatch.delenv("TARGET_BASE_URL", raising=False)
@@ -71,6 +73,7 @@ def test_load_from_yaml_valid_config(tmp_path, monkeypatch) -> None:
     assert settings.testset.path == "testset/questions.yaml"
 
 
+@pytest.mark.unit
 def test_load_from_yaml_missing_file_falls_back() -> None:
     """Non-existent file falls back to defaults."""
     settings = HarnessSettings.load_from_yaml("non_existent_config_file_12345.yaml")
@@ -80,6 +83,7 @@ def test_load_from_yaml_missing_file_falls_back() -> None:
     assert settings.judge.provider == "gemini"
 
 
+@pytest.mark.unit
 def test_load_from_yaml_invalid_yaml_raises_config_error(tmp_path) -> None:
     """Corrupted YAML raises ConfigValidationError."""
     config_file = tmp_path / "invalid_config.yaml"
@@ -92,6 +96,7 @@ def test_load_from_yaml_invalid_yaml_raises_config_error(tmp_path) -> None:
     assert "Invalid YAML config file" in str(exc_info.value)
 
 
+@pytest.mark.unit
 def test_validate_env_missing_judge_key_raises() -> None:
     """validate_env raises when judge key missing and required."""
     settings = HarnessSettings(judge_api_key=None)
@@ -102,6 +107,7 @@ def test_validate_env_missing_judge_key_raises() -> None:
     assert "JUDGE_API_KEY" in str(exc_info.value)
 
 
+@pytest.mark.unit
 def test_validate_env_passes_when_keys_present() -> None:
     """validate_env passes when keys are set."""
     settings = HarnessSettings(
@@ -113,6 +119,7 @@ def test_validate_env_passes_when_keys_present() -> None:
     settings.validate_env(require_judge_key=True, require_target_key=True)
 
 
+@pytest.mark.unit
 @mock.patch.dict(os.environ, {
     "TARGET_BASE_URL": "http://override.example.com",
     "JUDGE_API_KEY": "secret-judge-key",
@@ -136,6 +143,7 @@ def test_env_variable_overrides(tmp_path) -> None:
     assert settings.citebase_api_key == "secret-citebase-key"
 
 
+@pytest.mark.unit
 def test_get_settings_singleton() -> None:
     """Verify singleton pattern returns same object."""
     import harness.config

@@ -240,6 +240,8 @@ class HTMLReportGenerator:
         # Category rows
         cat_rows = ""
         for cat, vals in run.category_metrics.items():
+            emb_val = vals.get("embedding_similarity", 0.0)
+            judge_val = vals.get("llm_judge_score", 0.0)
             cat_rows += f"""
             <tr>
                 <td><strong>{html.escape(cat)}</strong></td>
@@ -248,6 +250,8 @@ class HTMLReportGenerator:
                 <td>{vals['recall']*100:.1f}%</td>
                 <td>{vals['f1']*100:.1f}%</td>
                 <td>{vals['faithfulness']*100:.1f}%</td>
+                <td>{emb_val:.2f}</td>
+                <td>{judge_val:.1f}</td>
                 <td>{vals['hallucination_rate']*100:.1f}%</td>
             </tr>
             """
@@ -273,30 +277,34 @@ class HTMLReportGenerator:
             </div>
         </header>
 
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #166534;">
+            <strong>Methodology Reliability Tiers:</strong> Metrics are segregated into <em>Tier 1 (Deterministic relative to curated ground truth)</em>, <em>Tier 2 (Continuous local embedding representation)</em>, and <em>Tier 3 (Model-dependent LLM-judge heuristics)</em>.
+        </div>
+
         <div class="kpi-grid">
             <div class="kpi-card">
-                <div class="kpi-label">Precision</div>
+                <div class="kpi-label">Precision <span class="badge badge-green" style="font-size: 10px;">Tier 1</span></div>
                 <div class="kpi-value">{run.mean_precision*100:.1f}%</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-label">Recall</div>
+                <div class="kpi-label">Recall <span class="badge badge-green" style="font-size: 10px;">Tier 1</span></div>
                 <div class="kpi-value">{run.mean_recall*100:.1f}%</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-label">F1 Score</div>
+                <div class="kpi-label">F1 Score <span class="badge badge-green" style="font-size: 10px;">Tier 1</span></div>
                 <div class="kpi-value">{run.mean_f1*100:.1f}%</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-label">Faithfulness</div>
+                <div class="kpi-label">Embedding Sim <span class="badge badge-blue" style="font-size: 10px;">Tier 2</span></div>
+                <div class="kpi-value">{run.mean_embedding_similarity:.2f}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Judge Score <span class="badge badge-yellow" style="font-size: 10px;">Tier 3</span></div>
+                <div class="kpi-value">{run.mean_llm_judge_score:.1f}/5.0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Faithfulness <span class="badge badge-yellow" style="font-size: 10px;">Tier 3</span></div>
                 <div class="kpi-value">{run.mean_faithfulness*100:.1f}%</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Latency p50</div>
-                <div class="kpi-value">{run.latency_profile.p50_ms:.1f} ms</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Latency p95</div>
-                <div class="kpi-value">{run.latency_profile.p95_ms:.1f} ms</div>
             </div>
         </div>
 
@@ -304,7 +312,7 @@ class HTMLReportGenerator:
             <h2 class="card-title">Category Breakdown</h2>
             <table>
                 <thead>
-                    <tr><th>Category</th><th>Count</th><th>Precision</th><th>Recall</th><th>F1</th><th>Faithfulness</th><th>Hallucination Rate</th></tr>
+                    <tr><th>Category</th><th>Count</th><th>Precision</th><th>Recall</th><th>F1</th><th>Faithfulness</th><th>Emb Sim</th><th>Judge (1-5)</th><th>Hallucination Rate</th></tr>
                 </thead>
                 <tbody>
                     {cat_rows}

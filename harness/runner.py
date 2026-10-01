@@ -110,6 +110,8 @@ class StageRunResult(BaseModel):
     mean_recall: float
     mean_f1: float
     mean_faithfulness: float
+    mean_embedding_similarity: float = 0.0
+    mean_llm_judge_score: float = 0.0
     hallucination_count: int
     hallucination_rate: float
     latency_profile: LatencyProfile
@@ -142,6 +144,7 @@ class EvaluationRunner:
             embedding_weight=self.settings.metrics.faithfulness.embedding_weight,
             llm_judge_weight=self.settings.metrics.faithfulness.llm_judge_weight,
             model_name=self.settings.judge.model,
+            temperature=self.settings.judge.temperature,
         )
         self.latency_profiler = LatencyProfiler()
         self.db = DatabaseManager(database_url=self.settings.storage.database_url)
@@ -284,6 +287,8 @@ class EvaluationRunner:
         mean_recall = sum(s.recall for s in successful) / n_success if n_success else 0.0
         mean_f1 = sum(s.f1 for s in successful) / n_success if n_success else 0.0
         mean_faithfulness = sum(s.faithfulness_score for s in successful) / n_success if n_success else 0.0
+        mean_embedding_similarity = sum(s.embedding_similarity for s in successful) / n_success if n_success else 0.0
+        mean_llm_judge_score = sum(s.llm_judge_score for s in successful) / n_success if n_success else 0.0
         hallucinations = [s for s in successful if s.is_hallucination]
         hallucination_rate = len(hallucinations) / n_success if n_success else 0.0
 
@@ -301,6 +306,8 @@ class EvaluationRunner:
                 "recall": round(sum(s.recall for s in cat_items) / cn, 4) if cn else 0.0,
                 "f1": round(sum(s.f1 for s in cat_items) / cn, 4) if cn else 0.0,
                 "faithfulness": round(sum(s.faithfulness_score for s in cat_items) / cn, 4) if cn else 0.0,
+                "embedding_similarity": round(sum(s.embedding_similarity for s in cat_items) / cn, 4) if cn else 0.0,
+                "llm_judge_score": round(sum(s.llm_judge_score for s in cat_items) / cn, 4) if cn else 0.0,
                 "hallucination_rate": round(sum(1 for s in cat_items if s.is_hallucination) / cn, 4) if cn else 0.0,
             }
 
@@ -315,6 +322,8 @@ class EvaluationRunner:
             mean_recall=round(mean_recall, 4),
             mean_f1=round(mean_f1, 4),
             mean_faithfulness=round(mean_faithfulness, 4),
+            mean_embedding_similarity=round(mean_embedding_similarity, 4),
+            mean_llm_judge_score=round(mean_llm_judge_score, 4),
             hallucination_count=len(hallucinations),
             hallucination_rate=round(hallucination_rate, 4),
             latency_profile=lat_profile,
@@ -326,6 +335,9 @@ class EvaluationRunner:
         run_id = f"run_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
         git_sha = get_git_commit_sha()
 
+        benchmark_id = Path(self.settings.testset.path).stem if hasattr(self.settings, "testset") else "citebase_25"
+        judge_model = getattr(getattr(self.settings, "judge", None), "model", "gemini-2.5-flash")
+
         run_data = {
             "id": run_id,
             "timestamp": datetime.now(timezone.utc),
@@ -336,6 +348,10 @@ class EvaluationRunner:
             "total_queries": run_res.total_queries,
             "successful_queries": run_res.successful_queries,
             "failed_queries": run_res.failed_queries,
+            "evaluation_schema_version": "2.0",
+            "benchmark_id": benchmark_id,
+            "embedding_model": "all-MiniLM-L6-v2",
+            "judge_model": judge_model,
         }
 
         metrics_data = [
@@ -343,6 +359,8 @@ class EvaluationRunner:
             {"metric_name": "retrieval_recall", "value": run_res.mean_recall, "category": None},
             {"metric_name": "retrieval_f1", "value": run_res.mean_f1, "category": None},
             {"metric_name": "faithfulness_avg", "value": run_res.mean_faithfulness, "category": None},
+            {"metric_name": "embedding_similarity_avg", "value": run_res.mean_embedding_similarity, "category": None},
+            {"metric_name": "llm_judge_score_avg", "value": run_res.mean_llm_judge_score, "category": None},
             {"metric_name": "hallucination_rate", "value": run_res.hallucination_rate, "category": None},
             {"metric_name": "latency_p50", "value": run_res.latency_profile.p50_ms, "category": None},
             {"metric_name": "latency_p95", "value": run_res.latency_profile.p95_ms, "category": None},
@@ -362,6 +380,12 @@ class EvaluationRunner:
             )
             metrics_data.append(
                 {"metric_name": "faithfulness_avg", "value": vals["faithfulness"], "category": cat}
+            )
+            metrics_data.append(
+                {"metric_name": "embedding_similarity_avg", "value": vals.get("embedding_similarity", 0.0), "category": cat}
+            )
+            metrics_data.append(
+                {"metric_name": "llm_judge_score_avg", "value": vals.get("llm_judge_score", 0.0), "category": cat}
             )
             metrics_data.append(
                 {"metric_name": "hallucination_rate", "value": vals["hallucination_rate"], "category": cat}

@@ -55,6 +55,7 @@ def create_sample_result(
     )
 
 
+@pytest.mark.unit
 def test_comparison_winner_identification() -> None:
     """Verify quality wins on high scores and speed wins on low latency."""
     # Config A: High quality, slower latency (typical of Reranker ON)
@@ -98,6 +99,7 @@ def test_comparison_winner_identification() -> None:
     assert metric_winners["Latency p99"] == "reranker_off"
 
 
+@pytest.mark.unit
 def test_comparison_per_category_breakdown() -> None:
     """Verify category breakdown combines metrics across both configs."""
     res_a = create_sample_result("cfg_a", 0.8, 0.8, 0.8, 0.8, 50, 60, 70)
@@ -112,6 +114,7 @@ def test_comparison_per_category_breakdown() -> None:
     assert "config_b" in cats["easy"]
 
 
+@pytest.mark.unit
 def test_comparison_tie_handling() -> None:
     """Identical configurations must produce ties and an overall tie."""
     res_a = create_sample_result("cfg_1", 0.8, 0.8, 0.8, 0.8, 50, 60, 70)
@@ -126,6 +129,7 @@ def test_comparison_tie_handling() -> None:
     assert report["wins_b"] == 0
 
 
+@pytest.mark.unit
 def test_comparison_unreachable_config() -> None:
     """If one config fails or is unreachable, return unreachable status instead of blank metrics."""
     res_a = create_sample_result("cfg_online", 0.8, 0.8, 0.8, 0.8, 50, 60, 70)
@@ -144,6 +148,7 @@ def test_comparison_unreachable_config() -> None:
     assert "Connection refused" in report["config_b"]["error"]
 
 
+@pytest.mark.unit
 def test_comparison_zero_successful_queries() -> None:
     """A config that produced 0 successful queries must be flagged as unreachable."""
     res_a = create_sample_result("cfg_good", 0.8, 0.8, 0.8, 0.8, 50, 60, 70, successful_queries=25)

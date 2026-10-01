@@ -34,6 +34,7 @@ import stub_app.fake_rag_api
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.unit
 def test_explicit_module_imports() -> None:
     """Verify that core classes and functions can be resolved from their modules."""
     # Contracts
@@ -113,6 +114,7 @@ def test_explicit_module_imports() -> None:
     logger.info("All explicit module imports and symbol assertions passed.")
 
 
+@pytest.mark.unit
 def test_walk_packages_imports() -> None:
     """Recursively discover and import all modules under the harness package namespace."""
     discovered: Set[str] = set()

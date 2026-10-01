@@ -33,6 +33,7 @@ from stub_app.fake_rag_api import app as stub_fastapi_app
 # --- Priority 1 & 2: RAG Client & Retry Logic (EH-1, EC-3, EC-14) ---
 
 
+@pytest.mark.mocked_integration
 def test_eh1_tenacity_retries_on_transient_network_error():
     """
     EH-1: Verify that transient network errors are retried by tenacity.
@@ -63,6 +64,7 @@ def test_eh1_tenacity_retries_on_transient_network_error():
     assert attempt == 2
 
 
+@pytest.mark.mocked_integration
 def test_eh1_exhausted_retries_raises_rag_connection_error():
     """
     EH-1: When all retries fail on network errors, RAGConnectionError is raised cleanly.
@@ -86,6 +88,7 @@ def test_eh1_exhausted_retries_raises_rag_connection_error():
     assert "Network error connecting" in str(exc_info.value)
 
 
+@pytest.mark.mocked_integration
 def test_ec3_ec14_retry_on_transient_http_429_and_503():
     """
     EC-3 & EC-14: Verify that HTTP 429 (Rate Limit) and 503 (Unavailable) are retried.
@@ -119,6 +122,7 @@ def test_ec3_ec14_retry_on_transient_http_429_and_503():
 # --- Priority 1 & 2: Faithfulness Scorer (EC-1, EC-4, EC-5, EC-16) ---
 
 
+@pytest.mark.unit
 def test_ec1_faithfulness_none_answer_does_not_crash():
     """
     EC-1: Passing answer=None to compute_embedding_similarity must not raise AttributeError.
@@ -133,6 +137,7 @@ def test_ec1_faithfulness_none_answer_does_not_crash():
     assert sim_empty == 0.0
 
 
+@pytest.mark.unit
 def test_ec4_embedding_model_load_failure_raises_embedding_model_error():
     """
     EC-4: If SentenceTransformer fails to load, EmbeddingModelError is raised.
@@ -149,6 +154,7 @@ def test_ec4_embedding_model_load_failure_raises_embedding_model_error():
             assert "CUDA Out of Memory" in str(exc_info.value)
 
 
+@pytest.mark.unit
 def test_ec5_ec16_dynamic_weight_fallback_and_hallucination_flag():
     """
     EC-5 & EC-16: When LLM judge fails or is unavailable:
@@ -180,6 +186,7 @@ def test_ec5_ec16_dynamic_weight_fallback_and_hallucination_flag():
 # --- Priority 1 & 2: Contracts & Normalization (EC-2, EC-11, EC-15, EH-3) ---
 
 
+@pytest.mark.unit
 def test_ec2_contracts_null_retrieved_chunks_does_not_crash():
     """
     EC-2: When target API responds with {"retrieved_chunks": null},
@@ -194,6 +201,7 @@ def test_ec2_contracts_null_retrieved_chunks_does_not_crash():
     assert resp.retrieved_chunks == []
 
 
+@pytest.mark.unit
 def test_ec15_contracts_null_answer_does_not_fail_validation():
     """
     EC-15: When target API responds with {"answer": null},
@@ -208,6 +216,7 @@ def test_ec15_contracts_null_answer_does_not_fail_validation():
     assert resp.retrieved_chunks == []
 
 
+@pytest.mark.unit
 def test_ec11_stub_adapter_unrecognized_schema_raises_value_error():
     """
     EC-11: If normalize_stub_response receives a dictionary missing both
@@ -219,6 +228,7 @@ def test_ec11_stub_adapter_unrecognized_schema_raises_value_error():
     assert "Stub adapter received unrecognized payload schema" in str(exc_info.value)
 
 
+@pytest.mark.unit
 def test_eh3_citebase_validation_error_re_raised_as_rag_response_error():
     """
     EH-3: If CiteBase receives a malformed payload, ValidationError is caught,
@@ -233,6 +243,7 @@ def test_eh3_citebase_validation_error_re_raised_as_rag_response_error():
 # --- Priority 2: Retrieval Scorer Type Coercion (EC-6) ---
 
 
+@pytest.mark.unit
 def test_ec6_compute_retrieval_metrics_integer_ids_coercion():
     """
     EC-6: compute_retrieval_metrics must coerce integer IDs to strings
@@ -251,6 +262,7 @@ def test_ec6_compute_retrieval_metrics_integer_ids_coercion():
 # --- Priority 2: Comparison Reporter None Latency Profile (EC-7) ---
 
 
+@pytest.mark.mocked_integration
 def test_ec7_comparison_none_latency_profile_does_not_crash():
     """
     EC-7: If a StageRunResult has latency_profile=None, ComparisonReporter.compare
@@ -291,6 +303,7 @@ def test_ec7_comparison_none_latency_profile_does_not_crash():
 # --- Priority 3: Stub API Error Simulation (EC-13) ---
 
 
+@pytest.mark.local_integration
 def test_ec13_fake_rag_api_simulate_error():
     """
     EC-13: fake_rag_api endpoint supports ?simulate_error=500 for robustness testing.

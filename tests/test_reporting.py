@@ -79,6 +79,7 @@ def sample_stage_result() -> StageRunResult:
     )
 
 
+@pytest.mark.unit
 def test_markdown_run_report_structure(sample_stage_result: StageRunResult) -> None:
     """Verify Markdown report contains all required headers, tables, and sections."""
     md = MarkdownReportGenerator.generate_run_report(sample_stage_result, git_commit_sha="abcdef123456")
@@ -87,6 +88,10 @@ def test_markdown_run_report_structure(sample_stage_result: StageRunResult) -> N
     assert "## Execution Metadata" in md
     assert "`abcdef12`" in md
     assert "## Summary Quality Metrics" in md
+    assert "### Tier 1: Deterministic Retrieval Metrics" in md
+    assert "### Tier 2: Continuous Semantic Representation Signals" in md
+    assert "### Tier 3: Model-Based Judge Signals" in md
+    assert "Model-Dependence Notice" in md
     assert "| **Retrieval Precision** | 85.0% |" in md
     assert "| **Retrieval F1 Score** | 82.4% |" in md
     assert "## Latency Percentile Profile" in md
@@ -101,6 +106,7 @@ def test_markdown_run_report_structure(sample_stage_result: StageRunResult) -> N
     assert "| `q02` |" in md
 
 
+@pytest.mark.unit
 def test_html_run_report_structure(sample_stage_result: StageRunResult) -> None:
     """Verify standalone HTML report contains embedded CSS, KPI cards, and print styles."""
     html_doc = HTMLReportGenerator.generate_run_report(sample_stage_result, git_commit_sha="abcdef123456")
@@ -112,6 +118,11 @@ def test_html_run_report_structure(sample_stage_result: StageRunResult) -> None:
     assert "http://" not in html_doc and "https://" not in html_doc
     # Print stylesheet
     assert "@media print" in html_doc
+    # Tier classification & notices
+    assert "Methodology Reliability Tiers" in html_doc
+    assert "Tier 1" in html_doc
+    assert "Tier 2" in html_doc
+    assert "Tier 3" in html_doc
     # KPI Cards
     assert "85.0%" in html_doc
     assert "82.4%" in html_doc
@@ -121,6 +132,7 @@ def test_html_run_report_structure(sample_stage_result: StageRunResult) -> None:
     assert "<strong>easy</strong>" in html_doc
 
 
+@pytest.mark.unit
 def test_markdown_comparison_report(sample_stage_result: StageRunResult) -> None:
     """Verify Markdown comparison report formats side-by-side metrics and winners."""
     comp = ComparisonReporter.compare("cfg_a", sample_stage_result, "cfg_b", sample_stage_result)
@@ -132,6 +144,7 @@ def test_markdown_comparison_report(sample_stage_result: StageRunResult) -> None
     assert "## Per-Category Performance Comparison" in md
 
 
+@pytest.mark.unit
 def test_html_comparison_report(sample_stage_result: StageRunResult) -> None:
     """Verify HTML comparison report renders clean side-by-side tables."""
     comp = ComparisonReporter.compare("cfg_a", sample_stage_result, "cfg_b", sample_stage_result)
@@ -143,6 +156,7 @@ def test_html_comparison_report(sample_stage_result: StageRunResult) -> None:
     assert "@media print" in html_doc
 
 
+@pytest.mark.unit
 def test_unreachable_reporting_graceful() -> None:
     """Verify unreachable configurations produce clear aborted notices in both formats."""
     comp = ComparisonReporter.compare("online", None, "offline", None, error_b="Host unreachable")

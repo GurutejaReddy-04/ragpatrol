@@ -76,6 +76,7 @@ class FaithfulnessScorer:
         judge_score_threshold: float = 2.0,
         gemini_client: Optional[Any] = None,
         model_name: str = "gemini-2.5-flash",
+        temperature: float = 0.0,
     ) -> None:
         """
         Initialize the dual-signal scorer.
@@ -86,6 +87,7 @@ class FaithfulnessScorer:
         :param judge_score_threshold: Ceiling at or below which judge triggers hallucination flag.
         :param gemini_client: Optional injected client (e.g. mock client for tests).
         :param model_name: Gemini model identifier.
+        :param temperature: Generation temperature for judge LLM.
         """
         self.embedding_weight = embedding_weight
         self.llm_judge_weight = llm_judge_weight
@@ -93,10 +95,12 @@ class FaithfulnessScorer:
         self.judge_score_threshold = judge_score_threshold
         self._gemini_client = gemini_client
         self.model_name = model_name
+        self.temperature = temperature
         logger.debug(
-            "FaithfulnessScorer initialized (weights: emb=%.2f, judge=%.2f)",
+            "FaithfulnessScorer initialized (weights: emb=%.2f, judge=%.2f, temp=%.1f)",
             embedding_weight,
             llm_judge_weight,
+            temperature,
         )
 
     def compute_embedding_similarity(self, answer: str, context_text: str) -> tuple[float, float]:
@@ -160,6 +164,7 @@ class FaithfulnessScorer:
                 response = client.models.generate_content(
                     model=self.model_name,
                     contents=prompt,
+                    config={"temperature": self.temperature},
                 )
                 raw_text = response.text if hasattr(response, "text") else str(response)
                 score, reasoning, claims = self._parse_judge_json(raw_text)

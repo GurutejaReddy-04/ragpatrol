@@ -49,6 +49,7 @@ def create_mock_run(
     return db.save_run(run)
 
 
+@pytest.mark.mocked_integration
 def test_no_prior_run(in_memory_db: DatabaseManager) -> None:
     """A baseline run without preceding historical runs must pass with 'no_prior_run'."""
     now = datetime.now(timezone.utc)
@@ -68,6 +69,7 @@ def test_no_prior_run(in_memory_db: DatabaseManager) -> None:
     assert res["current"]["retrieval_precision"] == 0.80
 
 
+@pytest.mark.mocked_integration
 def test_clear_regression_precision_drop(in_memory_db: DatabaseManager) -> None:
     """A 0.10 precision drop (exceeding 0.05 limit) must fail the regression check."""
     t0 = datetime.now(timezone.utc) - timedelta(hours=1)
@@ -99,6 +101,7 @@ def test_clear_regression_precision_drop(in_memory_db: DatabaseManager) -> None:
     assert reg["delta"] == -0.10
 
 
+@pytest.mark.mocked_integration
 def test_clear_improvement(in_memory_db: DatabaseManager) -> None:
     """Metric improvements must pass with zero regression flags."""
     t0 = datetime.now(timezone.utc) - timedelta(hours=1)
@@ -124,6 +127,7 @@ def test_clear_improvement(in_memory_db: DatabaseManager) -> None:
     assert len(res["regressions"]) == 0
 
 
+@pytest.mark.mocked_integration
 def test_within_tolerance_noise(in_memory_db: DatabaseManager) -> None:
     """A 0.03 drop within the 0.05 tolerance limit must pass."""
     t0 = datetime.now(timezone.utc) - timedelta(hours=1)
@@ -149,6 +153,7 @@ def test_within_tolerance_noise(in_memory_db: DatabaseManager) -> None:
     assert len(res["regressions"]) == 0
 
 
+@pytest.mark.mocked_integration
 def test_missing_metrics_handled_gracefully(in_memory_db: DatabaseManager) -> None:
     """Disparate metrics across runs must be handled without throwing errors."""
     t0 = datetime.now(timezone.utc) - timedelta(hours=1)
@@ -174,6 +179,7 @@ def test_missing_metrics_handled_gracefully(in_memory_db: DatabaseManager) -> No
     assert len(res["regressions"]) == 0
 
 
+@pytest.mark.mocked_integration
 def test_latency_p95_relative_increase(in_memory_db: DatabaseManager) -> None:
     """Latency p95 increasing by >20% relative must trigger regression."""
     t0 = datetime.now(timezone.utc) - timedelta(hours=1)

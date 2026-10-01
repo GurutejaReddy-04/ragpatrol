@@ -31,6 +31,10 @@ class EvalRun(Base):
     total_queries: Mapped[int] = mapped_column(Integer, default=0)
     successful_queries: Mapped[int] = mapped_column(Integer, default=0)
     failed_queries: Mapped[int] = mapped_column(Integer, default=0)
+    evaluation_schema_version: Mapped[str] = mapped_column(String(32), default="2.0")
+    benchmark_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, default="citebase_25")
+    embedding_model: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, default="all-MiniLM-L6-v2")
+    judge_model: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, default="gemini-2.5-flash")
 
     metrics: Mapped[list["RunMetric"]] = relationship(
         "RunMetric", back_populates="run", cascade="all, delete-orphan", lazy="selectin"
