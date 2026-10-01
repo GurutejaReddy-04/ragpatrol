@@ -36,13 +36,13 @@ This site provides a quick overview of the project, key features, and links to t
 
 ## 📐 Evaluation Methodology & Metric Taxonomy
 
-RAGPatrol is built upon a formalized **11-point evaluation methodology** detailed in [`docs/evaluation_methodology.md`](docs/evaluation_methodology.md).
+RAGPatrol is built upon a formalized **11-point evaluation methodology** detailed in [`docs/evaluation_methodology.md`](docs/evaluation_methodology.md) (also referenced as [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md)).
 
 To prevent confusing model heuristics with objective measurements, metrics are strictly classified into three reliability tiers:
 
 | Tier | Metric Category | Metrics Included | Measurement Nature & Reliability Boundaries |
 | :--- | :--- | :--- | :--- |
-| **Tier 1** | **Deterministic Retrieval** | Precision, Recall, Harmonic F1 | **Deterministic relative to curated ground-truth annotations.** Evaluated via unranked set math ($TP = \|Retrieved \cap GroundTruth\|$). 100% reproducible with zero LLM dependency. |
+| **Tier 1** | **Deterministic Retrieval** | Precision, Recall, Harmonic F1 | **Deterministic relative to curated ground-truth annotations.** Evaluated via unranked set math (`TP = |Retrieved ∩ GroundTruth|`). 100% reproducible with zero LLM dependency. |
 | **Tier 2** | **Semantic Representation** | Cosine Similarity (MiniLM) | **Continuous dense representation proxy.** Compares answer text against concatenated retrieved passages using `all-MiniLM-L6-v2`. Detects topical drift locally. |
 | **Tier 3** | **Model-Based LLM Judge** | Judge Score (1-5), Composite Faithfulness, Hallucination Rate | **Stochastic, model-dependent heuristic.** Evaluated via Google Gemini (`gemini-2.5-flash` at temperature 0.0 to reduce sampling variability). Sensitive to prompt framing and provider model revisions; does not guarantee bit-for-bit reproducibility and must not be interpreted as absolute ground truth. |
 
@@ -57,6 +57,8 @@ To prevent confusing model heuristics with objective measurements, metrics are s
 ---
 
 ## System Architecture
+
+For the complete architectural specification and sequence flow, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ```mermaid
 flowchart TD

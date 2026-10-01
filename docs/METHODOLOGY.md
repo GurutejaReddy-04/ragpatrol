@@ -2,7 +2,8 @@
 
 > **Version:** 2.0  
 > **Status:** Active  
-> **Target Systems:** RAG Services and HTTP Interfaces
+> **Target Systems:** RAG Services and HTTP Interfaces  
+> **Canonical Document:** [`docs/evaluation_methodology.md`](evaluation_methodology.md)
 
 This document defines the mathematical, architectural, and procedural methodology behind **RAGPatrol**'s evaluation metrics, regression gating, and scoring algorithms.
 
@@ -69,6 +70,9 @@ $$
 F_1 = \begin{cases} 2 \cdot \frac{\text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}} & \text{if } (\text{Precision} + \text{Recall}) > 0 \\ 0.0 & \text{otherwise} \end{cases}
 $$
 
+### Note on Ranked Metrics (P@K, NDCG, MRR)
+Unlike ranking algorithms that optimize document position, black-box RAG endpoints typically deliver variable-length result sets to a downstream generation prompt where all retrieved context is presented concurrently. Consequently, RAGPatrol prioritizes unranked set recall and precision over positional rank penalties.
+
 ---
 
 ## 4. Faithfulness Definition
@@ -93,7 +97,8 @@ flowchart TD
     JUDGE -->|Judge Score ∈ [1, 5] normalized to [0.2, 1.0]| COMBINE
 
     COMBINE --> FINAL["Faithfulness Score<br/>= w_emb · Sim_emb + w_judge · (Score_judge / 5.0)"]
-    FINAL --> GATE{"Hallucination Trigger Check"}
+    GATE{"Hallucination Trigger Check"}
+    FINAL --> GATE
     GATE -->|Score_judge ≤ 2.0 OR Sim_emb < 0.50 OR Judge Unavailable| FLAG["Flagged as Hallucination (is_hallucination = True)"]
     GATE -->|Passes All Thresholds| CLEAN["Verified Faithful Answer"]
 ```
